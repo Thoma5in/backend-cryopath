@@ -1,0 +1,4 @@
+packages:
+  - "auth-usuarios"
+  - "productos-inventario"
+  - "pedidos-pagos-carrito"

@@ -1,0 +1,64 @@
+# =========================
+# Dependencias
+# =========================
+node_modules/
+.pnpm-store/
+
+# =========================
+# Archivos de entorno
+# =========================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Build / dist
+# =========================
+dist/
+build/
+out/
+
+# =========================
+# Cache y temporales
+# =========================
+.cache/
+.tmp/
+.temp/
+.eslintcache
+
+# =========================
+# Sistema Operativo
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDEs y editores
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Testing
+# =========================
+coverage/
+
+# =========================
+# Docker (si luego usan)
+# =========================
+docker-data/
