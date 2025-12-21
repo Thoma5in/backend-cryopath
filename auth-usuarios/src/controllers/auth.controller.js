@@ -48,3 +48,33 @@ export const register = async (req, res) => {
     }
 
 }
+
+export const login = async (req, res) => {
+    const { correo, password } = req.body;
+
+    if (!correo || !password) {
+        return res.status(400).json({ message: 'Correo y password son obligatorios' });
+    }
+
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: correo,
+            password,
+        });
+
+        if (error || !data?.user) {
+            return res.status(401).json({ message: 'Credenciales inválidas' });
+        }
+
+        return res.status(200).json({
+            message: 'Inicio de sesión exitoso',
+            user: data.user,
+            session: data.session,
+        });
+    } catch (error) {
+        console.error('Error en login:', error);
+        return res.status(500).json({
+            error: 'Error interno del servidor',
+        });
+    }
+};

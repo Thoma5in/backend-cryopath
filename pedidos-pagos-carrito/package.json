@@ -1,9 +1,8 @@
 {
-  "name": "pedidos-pagos-carrito",
+  "name": "auth-usuarios",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/server.js",
   "type": "module",
+  "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
