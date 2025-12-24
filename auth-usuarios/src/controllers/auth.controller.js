@@ -66,9 +66,20 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
+        const { data: perfilData, error: perfilError } = await supabase
+            .from('usuario')
+            .select('id, nombre, apellido, correo, direccion, estado')
+            .eq('id', data.user.id)
+            .single();
+
+        if (perfilError) {
+            return res.status(500).json({ error: perfilError.message });
+        }
+
         return res.status(200).json({
             message: 'Inicio de sesión exitoso',
             user: data.user,
+            usuario: perfilData,
             session: data.session,
         });
     } catch (error) {
