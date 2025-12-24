@@ -27,3 +27,25 @@ export const getCurrentUsuario = async (req, res) => {
 		return res.status(500).json({ error: 'Error interno del servidor' });
 	}
 };
+
+export const updateUsuario = async (req, res) => {
+	try {
+		const { nombre, apellido, direccion } = req.body
+		const user = req.user
+
+		const { data, error } = await supabase
+		.from('usuario')
+		.update({ nombre, apellido, direccion })
+		.eq('id', user.id)
+		.select()
+		.single()
+
+		if (error) {
+			return res.status(500).json({ error: error.message });
+		}
+
+		res.json(data)
+	} catch (error) {
+		res.status(500).json({ error: 'Error interno del servidor' });
+	}
+}
