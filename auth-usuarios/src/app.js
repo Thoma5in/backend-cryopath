@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
 
 const app = express();
@@ -14,5 +15,7 @@ app.get("/health", (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/usuarios', usuarioRoutes);
+
+app.use('/admin', adminRoutes);
 
 export default app;

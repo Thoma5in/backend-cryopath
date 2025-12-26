@@ -16,8 +16,21 @@ export const requireAuth = async (req, res, next) => {
 			return res.status(401).json({ message: 'Token inválido' });
 		}
 
-		req.user = data.user;
-		return next();
+		// Obtener roles del usuario
+		const { data: rolesData, error: rolesError } = await supabase
+			.from('usuario_rol')
+			.select('rol(nombre)')
+			.eq('id_usuario', data.user.id);
+
+		if (rolesError) {
+			return res.status(500).json({ error: rolesError.message });
+		}
+
+		const roles = rolesData.map(r => r.rol.nombre);
+
+		req.user = {...data.user, roles};
+		
+		next();
 	} catch (err) {
 		return res.status(500).json({ error: 'Error interno del servidor' });
 	}
