@@ -34,6 +34,19 @@ export const register = async (req, res) => {
             telefono
         });
 
+    //Asignar rol predeterminado 
+    const { error: rolError} = await supabase
+    .from('usuario_rol')
+    .insert({
+        id_usuario: userId,
+        id_rol: 1 //usuario
+    })
+
+    if (rolError) {
+        return res.status(400).json({ error: rolError.message });
+    }
+
+
     if (dbError) {
         return res.status(400).json({ error: dbError.message });
     }
@@ -47,6 +60,9 @@ export const register = async (req, res) => {
             error: 'Error interno del servidor'
         })
     }
+
+    
+    
 
 }
 
