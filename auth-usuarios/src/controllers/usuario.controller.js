@@ -10,7 +10,7 @@ export const getCurrentUsuario = async (req, res) => {
 	try {
 		const { data, error } = await supabase
 			.from('usuario')
-			.select('id, nombre, apellido, correo, direccion, estado')
+			.select('id, nombre, apellido, correo, telefono, direccion, estado')
 			.eq('id', userId)
 			.single();
 
@@ -30,12 +30,12 @@ export const getCurrentUsuario = async (req, res) => {
 
 export const updateUsuario = async (req, res) => {
 	try {
-		const { nombre, apellido, direccion } = req.body
+		const { nombre, apellido, direccion, telefono } = req.body
 		const user = req.user
 
 		const { data, error } = await supabase
 		.from('usuario')
-		.update({ nombre, apellido, direccion })
+		.update({ nombre, apellido, direccion, telefono })
 		.eq('id', user.id)
 		.select()
 		.single()

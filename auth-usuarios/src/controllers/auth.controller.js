@@ -1,9 +1,9 @@
 import supabase from '../config/supabase.js';
 
 export const register = async (req, res) => {
-    const { nombre, apellido, correo, password, direccion} = req.body;
+    const { nombre, apellido, correo, password, direccion, telefono} = req.body;
 
-    if (!nombre || !apellido || !correo || !password || !direccion) {
+    if (!nombre || !apellido || !correo || !password || !direccion || !telefono) {
         return res.status(400).json({ message: 'Faltan datos obligatorios' });
     }
 
@@ -31,6 +31,7 @@ export const register = async (req, res) => {
             correo,
             direccion,
             estado: 'activo',
+            telefono
         });
 
     if (dbError) {
@@ -68,7 +69,7 @@ export const login = async (req, res) => {
 
         const { data: perfilData, error: perfilError } = await supabase
             .from('usuario')
-            .select('id, nombre, apellido, correo, direccion, estado')
+            .select('id, nombre, apellido, correo, telefono, direccion, estado')
             .eq('id', data.user.id)
             .single();
 
