@@ -2,3 +2,4 @@ packages:
   - "auth-usuarios"
   - "productos-inventario"
   - "pedidos-pagos-carrito"
+  - "ai-assistant"
