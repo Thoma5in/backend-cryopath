@@ -34,10 +34,28 @@ export const sendMessage = async (req, res) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response from n8n:', errorText);
       throw new Error(`Error del webhook n8n: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    // Obtener el content-type
+    const contentType = response.headers.get('content-type');
+    
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // Si no es JSON, intenta parsear el texto
+      const text = await response.text();
+      console.log('Respuesta de n8n (texto):', text);
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // Si tampoco es parseable, usa el texto como respuesta
+        data = { message: text };
+      }
+    }
 
     res.json({
       success: true,
