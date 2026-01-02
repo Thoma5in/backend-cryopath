@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { supabase } from "./config/supabase.js";
+import productosRoutes from "./routes/productos.routes.js";
 
 const app = express();
 
@@ -10,7 +11,7 @@ app.use(express.json());
 app.get("/health", async (req, res) => {
   try {
     // Verificar conexión a Supabase
-    const { error } = await supabase.from('productos').select('count', { count: 'exact', head: true });
+    const { error } = await supabase.from('producto').select('count', { count: 'exact', head: true });
     
     if (error && error.code !== 'PGRST116') { // PGRST116 es "tabla no encontrada", lo cual está bien por ahora
       throw error;
@@ -28,5 +29,8 @@ app.get("/health", async (req, res) => {
     });
   }
 });
+
+// Rutas de productos
+app.use("/productos", productosRoutes);
 
 export default app;
