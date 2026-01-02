@@ -49,3 +49,73 @@ export const updateUsuario = async (req, res) => {
 		res.status(500).json({ error: 'Error interno del servidor' });
 	}
 }
+
+export const deleteUsuario = async (req, res) => {
+	const userId = req.user.id;
+
+	try {
+		const { error } = await supabase
+		.from('usuario')
+		.update({ estado: 'inactivo' })
+		.eq('id', userId)
+
+		if (error) throw error
+
+		return res.status(200).json({
+			message: 'Usuario desactivado correctamente'
+		})
+	} catch (error) {
+		return res.status(500).json({
+			message: "Error al desactivar el usuario",
+		})
+
+	}
+}
+
+
+export const checkEmailStatus = async (req, res) => {
+	const { correo } = req.body;
+
+	if (!correo) {
+		return res.status(400).json({ message: 'Correo electrónico es requerido' });
+	}
+
+	const {data, error} = await supabase
+	.from('usuario')
+	.select('id, estado')
+	.eq('correo', correo)
+	.single();
+
+	if (error && error.code !== 'PGRST116') {
+		return res.status(500).json({ message: 'Error al verificar el correo electrónico' });
+	}
+
+	//No existe
+	if (!data) {
+		return res.status(200).json({ exists: false });
+	}
+
+	//Existe
+	return res.status(200).json({ exists: true, estado: data.estado });
+}
+
+export const reactivateAccount = async (req, res) => {
+  const { correo } = req.body
+
+  if (!correo) {
+    return res.status(400).json({ message: 'Correo requerido' })
+  }
+
+  const { error } = await supabase
+    .from('usuario')
+    .update({ estado: 'activo' })
+    .eq('correo', correo)
+
+  if (error) {
+    return res.status(500).json({ message: 'No se pudo reactivar la cuenta' })
+  }
+
+  return res.status(200).json({
+    message: 'Cuenta reactivada correctamente',
+  })
+}

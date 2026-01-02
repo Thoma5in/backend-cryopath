@@ -16,11 +16,27 @@ export const requireAuth = async (req, res, next) => {
 			return res.status(401).json({ message: 'Token inválido' });
 		}
 
+		const { data:usuarioData, error:usuarioError } = await supabase
+		.from('usuario')
+		.select('estado')
+		.eq('id', data.user.id)
+		.single();
+
+		if (usuarioError || !usuarioData) {
+      		return res.status(403).json({ message: 'Usuario no encontrado' })
+    	}
+
+		if (usuarioData.estado !== 'activo') {
+			return res.status(403).json({ message: 'Cuenta inactiva' })
+		}
+
 		// Obtener roles del usuario
 		const { data: rolesData, error: rolesError } = await supabase
 			.from('usuario_rol')
 			.select('rol(nombre)')
 			.eq('id_usuario', data.user.id);
+
+			
 
 		if (rolesError) {
 			return res.status(500).json({ error: rolesError.message });
