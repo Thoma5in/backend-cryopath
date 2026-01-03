@@ -1,5 +1,6 @@
 import { supabase } from "../config/supabase.js";
 
+
 export const crearProducto = async (req, res) => {
 	const {
 		nombre,
@@ -48,3 +49,18 @@ export const crearProducto = async (req, res) => {
 	}
 };
 
+
+export const obtenerProductos = async (req, res) => {
+	try {
+		const { data, error } = await supabase.from("producto").select("*");
+		if (error) {
+			return res.status(400).json({ error: error.message });
+		}
+		return res.status(200).json({ productos: data });
+	} catch (error) {
+		console.error("Error al obtener productos:", error);
+		return res.status(500).json({
+			error: "Error interno del servidor",
+		});
+	}
+};
