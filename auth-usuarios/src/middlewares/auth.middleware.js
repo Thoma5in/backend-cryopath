@@ -33,7 +33,11 @@ export const requireAuth = async (req, res, next) => {
 		// Obtener roles del usuario
 		const { data: rolesData, error: rolesError } = await supabase
 			.from('usuario_rol')
-			.select('rol(nombre)')
+			.select(`
+					rol:id_rol (
+					nombre
+					)
+				`)
 			.eq('id_usuario', data.user.id);
 
 			
@@ -42,7 +46,7 @@ export const requireAuth = async (req, res, next) => {
 			return res.status(500).json({ error: rolesError.message });
 		}
 
-		const roles = rolesData.map(r => r.rol.nombre);
+		const roles = rolesData.map(r => r.rol?.nombre).filter(Boolean);
 
 		req.user = {...data.user, roles};
 		
