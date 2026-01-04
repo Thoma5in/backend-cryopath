@@ -119,3 +119,20 @@ export const reactivateAccount = async (req, res) => {
     message: 'Cuenta reactivada correctamente',
   })
 }
+
+export const getUserRoles = async (req, res) => {
+  const userId = req.user.id;
+
+  const { data, error } = await supabase
+    .from('usuario_rol')
+    .select('rol(nombre)')
+    .eq('id_usuario', userId);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  const roles = data.map(r => r.rol.nombre);
+
+  res.json({ roles });
+};
