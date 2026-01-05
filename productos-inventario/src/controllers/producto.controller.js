@@ -122,3 +122,41 @@ export const editarProducto = async (req, res) => {
 		});
 	}
 };
+
+
+export const eliminarProducto = async (req, res) => {
+	const { id_producto } = req.params;
+
+	if (!id_producto) {
+		return res
+			.status(400)
+			.json({ message: "El id_producto del producto es obligatorio" });
+	}
+
+	try {
+		const { data, error } = await supabase
+			.from("producto")
+			.delete()
+			.eq("id_producto", id_producto)
+			.select()
+			.single();
+
+		if (error) {
+			return res.status(400).json({ error: error.message });
+		}
+
+		if (!data) {
+			return res.status(404).json({ message: "Producto no encontrado" });
+		}
+
+		return res.status(200).json({
+			message: "Producto eliminado exitosamente",
+			producto: data,
+		});
+	} catch (error) {
+		console.error("Error al eliminar producto:", error);
+		return res.status(500).json({
+			error: "Error interno del servidor",
+		});
+	}
+};

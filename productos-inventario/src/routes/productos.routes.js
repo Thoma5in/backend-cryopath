@@ -2,6 +2,7 @@ import { Router } from "express";
 import { crearProducto } from "../controllers/producto.controller.js";
 import { obtenerProductos } from "../controllers/producto.controller.js";
 import { editarProducto } from "../controllers/producto.controller.js";
+import { eliminarProducto } from "../controllers/producto.controller.js";
 import { requireWorkerOrAdmin } from "../../../auth-usuarios/src/middlewares/worker.middleware.js";
 
 const router = Router();
@@ -12,6 +13,8 @@ router.post("/", requireWorkerOrAdmin, crearProducto);
 router.get("/", obtenerProductos);
 // Endpoint para editar un producto existente
 router.put("/:id_producto", requireWorkerOrAdmin, editarProducto);
+// Endpoint para eliminar un producto existente
+router.delete("/:id_producto", requireWorkerOrAdmin, eliminarProducto);
 
 
 export default router;
