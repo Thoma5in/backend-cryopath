@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { supabase } from "./config/supabase.js";
 import productosRoutes from "./routes/productos.routes.js";
+import storageProductosRoutes from "./routes/storageProductos.routes.js";
 
 const app = express();
 
@@ -32,5 +33,7 @@ app.get("/health", async (req, res) => {
 
 // Rutas de productos
 app.use("/productos", productosRoutes);
+// Rutas de storage del bucket "productos" (p.ej. POST /productos/:id_producto/imagen)
+app.use("/productos", storageProductosRoutes);
 
 export default app;

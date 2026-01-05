@@ -12,9 +12,8 @@ app.get("/health", (req, res) => {
 
 app.get("/test-db", async (req, res) => {
   const { data, error } = await supabase
-  .from("/orden")
-  .select("*")
-  .limit(1);
+  .from("producto")
+  .select(`*, producto_imagen (id_imagen, url)`);
 
   if (error) {
     return res.status(500).json({ error: error.message });
