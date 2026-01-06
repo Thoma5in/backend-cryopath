@@ -1,6 +1,18 @@
 import { supabase } from "../config/supabase.js";
 
 
+const extraerRutaObjeto = (url) => {
+	try {
+		const pathname = new URL(url).pathname;
+		const marcador = "/productos/";
+		const indice = pathname.indexOf(marcador);
+		return indice === -1 ? null : pathname.slice(indice + marcador.length);
+	} catch {
+		return null;
+	}
+};
+
+
 export const crearProducto = async (req, res) => {
 	const {
 		nombre,
@@ -134,6 +146,36 @@ export const eliminarProducto = async (req, res) => {
 	}
 
 	try {
+		const { data: imagenes, error: obtenerImagenesError } = await supabase
+			.from("producto_imagen")
+			.select("url")
+			.eq("id_producto", id_producto);
+		if (obtenerImagenesError) {
+			return res.status(400).json({ error: obtenerImagenesError.message });
+		}
+
+		const rutasAlmacenadas =
+			imagenes
+				?.map(({ url }) => extraerRutaObjeto(url))
+				.filter(Boolean) ?? [];
+
+		if (rutasAlmacenadas.length) {
+			const { error: storageError } = await supabase.storage
+				.from("productos")
+				.remove(rutasAlmacenadas);
+			if (storageError) {
+				return res.status(400).json({ error: storageError.message });
+			}
+		}
+
+		const { error: imagenError } = await supabase
+			.from("producto_imagen")
+			.delete()
+			.eq("id_producto", id_producto);
+		if (imagenError) {
+			return res.status(400).json({ error: imagenError.message });
+		}
+
 		const { data, error } = await supabase
 			.from("producto")
 			.delete()
@@ -158,5 +200,32 @@ export const eliminarProducto = async (req, res) => {
 		return res.status(500).json({
 			error: "Error interno del servidor",
 		});
+	}
+};
+
+
+export const obtenerImagenProducto = async (req, res) => {
+	const { id_producto } = req.params;
+	if (!id_producto) {
+		return res.status(400).json({ message: "El id_producto es obligatorio" });
+	}
+	try {
+		const { data, error } = await supabase
+			.from("producto_imagen")
+			.select("url")
+			.eq("id_producto", id_producto)
+			.order("id_imagen", { ascending: false })
+			.limit(1)
+			.single();
+		if (error) {
+			return res.status(400).json({ error: error.message });
+		}
+		if (!data) {
+			return res.status(404).json({ message: "Imagen no encontrada" });
+		}
+		return res.status(200).json({ url: data.url });
+	} catch (err) {
+		console.error("Error al obtener imagen de producto:", err);
+		return res.status(500).json({ error: "Error interno del servidor" });
 	}
 };
