@@ -83,3 +83,25 @@ export const listarRoles = async (req, res) => {
     })
   }
 }
+
+export const cambiarEstadoUsuario = async (req, res) => {
+  const { id_usuario, estado } = req.body;
+
+  if (typeof id_usuario === 'undefined' || typeof estado === 'undefined') {
+    return res.status(400).json({ message: 'id_usuario y estado son necesarios' });
+  }
+
+  try {
+    const { error } = await supabase
+      .from('usuario')
+      .update({ estado })
+      .eq('id', id_usuario);
+
+    if (error) throw error;
+
+    res.json({ message: 'Estado del usuario actualizado correctamente' });
+  } catch (err) {
+    console.error('Error cambiando estado del usuario:', err);
+    res.status(500).json({ message: 'Error cambiando estado del usuario' });
+  }
+}

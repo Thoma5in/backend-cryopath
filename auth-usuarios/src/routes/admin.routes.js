@@ -5,6 +5,7 @@ import { adminDashboard } from '../controllers/admin.controller.js';
 import { asignarRol } from '../controllers/admin.controller.js';
 import { listarUsuarios } from '../controllers/admin.controller.js';
 import { listarRoles } from '../controllers/admin.controller.js';
+import { cambiarEstadoUsuario } from '../controllers/admin.controller.js';
 
 
 const router = Router();
@@ -13,5 +14,6 @@ router.get('/dashboard', requireAuth, requireAdmin, adminDashboard);
 router.get('/usuarios', requireAuth, requireAdmin, listarUsuarios);
 router.get('/roles', requireAuth, requireAdmin, listarRoles);
 router.post('/asignar-rol', requireAuth, requireAdmin, asignarRol);
+router.put('/cambiar-estado', requireAuth, requireAdmin, cambiarEstadoUsuario);
 
 export default router;
