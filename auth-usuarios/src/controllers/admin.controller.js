@@ -55,7 +55,7 @@ export const listarUsuarios = async (req, res) => {
   try {
     const {data, error} = await supabase
     .from('usuario')
-    .select('id, correo, nombre, apellido')
+    .select('id, correo, nombre, apellido, estado')
 
     if (error) throw error
 
