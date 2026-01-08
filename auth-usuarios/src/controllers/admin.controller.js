@@ -105,3 +105,55 @@ export const cambiarEstadoUsuario = async (req, res) => {
     res.status(500).json({ message: 'Error cambiando estado del usuario' });
   }
 }
+
+
+export const eliminarUsuario = async (req, res) => {
+  const { id_usuario } = req.params;
+
+  if (!id_usuario) {
+    return res.status(400).json({ message: 'id_usuario es necesario' });
+  }
+
+  try {
+    // Verificar Usuario
+    const { data: usuario, error: usuarioError } = await supabase
+    .from('usuario')
+    .select('id')
+    .eq('id', id_usuario)
+    .single()
+
+    if (usuarioError || !usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Eliminar roles
+    const {error: rolesError } = await supabase
+    .from('usuario_rol')
+    .delete()
+    .eq('id_usuario', id_usuario);
+
+    if (rolesError) throw rolesError;
+
+    // Eliminar usuario (tabla usuario)
+    const {error:deleteUserError} = await supabase
+    .from('usuario')
+    .delete()
+    .eq('id', id_usuario)
+
+    if (deleteUserError) throw deleteUserError;
+
+    //Eliminar usuario de Auth de Supabase
+    const { error: authError } = await supabase.auth.admin.deleteUser(id_usuario);
+
+    if (authError) throw authError;
+
+    return res.json({ message: 'Usuario eliminado correctamente' });
+
+
+
+    
+  } catch (err) {
+    console.error('Error eliminando usuario:', err); 
+    return res.status(500).json({ message: 'Error eliminando usuario' });
+  }
+}
