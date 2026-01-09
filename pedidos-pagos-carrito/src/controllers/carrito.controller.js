@@ -29,7 +29,7 @@ export const getCart = async (req, res) => {
 
       //Normalizar salida para el frontend
       const items = data.carrito_producto.map(item => ({
-        id: item.producto.id_producto,
+        id: item.id_carrito_producto,
         id_producto: item.producto.id_producto,
         nombre: item.producto.nombre,
         precio: item.producto.precio_base,
