@@ -10,7 +10,7 @@ export const getCart = async (req, res) => {
     .select(`
         id_carrito,
         carrito_producto (
-          id_carrito_producto,
+          id_producto,
           cantidad,
           producto (
             id_producto,
@@ -29,7 +29,7 @@ export const getCart = async (req, res) => {
 
       //Normalizar salida para el frontend
       const items = data.carrito_producto.map(item => ({
-        id: item.id_carrito_producto,
+        id: item.producto.id_producto,
         id_producto: item.producto.id_producto,
         nombre: item.producto.nombre,
         precio: item.producto.precio_base,
@@ -120,7 +120,8 @@ export const updateQuantity = async (req, res) => {
   await supabase
     .from("carrito_producto")
     .update({ cantidad })
-    .eq("id_carrito_producto", itemId);
+    .eq("id_carrito", carrito.id_carrito)
+    .eq("id_producto", itemId);
 
   res.json({ success: true });
 };
@@ -131,7 +132,8 @@ export const deleteItem = async (req, res) => {
   await supabase
     .from("carrito_producto")
     .delete()
-    .eq("id_carrito_producto", itemId);
+    .eq("id_carrito", carrito.id_carrito)
+    .eq("id_producto", itemId);
 
   res.json({ success: true });
 };
