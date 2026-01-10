@@ -3,6 +3,8 @@ import cors from "cors";
 import { supabase } from "./config/supabase.js";
 import productosRoutes from "./routes/productos.routes.js";
 import storageProductosRoutes from "./routes/storageProductos.routes.js";
+import inventarioRoutes from "./routes/inventario.routes.js";
+
 
 const app = express();
 
@@ -35,5 +37,8 @@ app.get("/health", async (req, res) => {
 app.use("/productos", productosRoutes);
 // Rutas de storage del bucket "productos" (p.ej. POST /productos/:id_producto/imagen)
 app.use("/productos", storageProductosRoutes);
+// Rutas de inventario
+app.use("/inventario", inventarioRoutes);
+
 
 export default app;
