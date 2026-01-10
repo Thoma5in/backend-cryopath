@@ -127,15 +127,39 @@ export const updateQuantity = async (req, res) => {
 };
 
 export const deleteItem = async (req, res) => {
-    const { itemId } = req.params;
+  try {
+    const { itemId, userId } = req.params;
 
-  await supabase
+    // Obtener el carrito del usuario
+    const { data: carrito, error: carritoError } = await supabase
+    .from("carrito")
+    .select("id_carrito")
+    .eq("id_usuario", userId)
+    .single();
+
+    if (carritoError || !carrito) {
+      return res.status(404).json({ success: false, message: "Carrito no encontrado" });
+    }
+
+    // Eliminar el item del carrito
+    const { error } = await supabase
     .from("carrito_producto")
     .delete()
     .eq("id_carrito", carrito.id_carrito)
     .eq("id_producto", itemId);
 
+    if (error) {
+      throw error;
+    }
+
   res.json({ success: true });
+  } catch (error) {
+    console.error("Error al eliminar el item del carrito:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar el item del carrito",
+    });
+  }
 };
 
 export const clearCart = async (req, res) => {
