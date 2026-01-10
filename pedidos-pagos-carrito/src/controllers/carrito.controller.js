@@ -10,7 +10,7 @@ export const getCart = async (req, res) => {
     .select(`
         id_carrito,
         carrito_producto (
-          id_carrito_producto,
+          id_producto,
           cantidad,
           producto (
             id_producto,
@@ -29,7 +29,7 @@ export const getCart = async (req, res) => {
 
       //Normalizar salida para el frontend
       const items = data.carrito_producto.map(item => ({
-        id: item.id_carrito_producto,
+        id: item.producto.id_producto,
         id_producto: item.producto.id_producto,
         nombre: item.producto.nombre,
         precio: item.producto.precio_base,
@@ -114,26 +114,94 @@ export const addToCart = async (req, res) => {
 };
 
 export const updateQuantity = async (req, res) => {
-  const { itemId } = req.params;
-  const { cantidad } = req.body;
+  try {
+    const { itemId, userId } = req.params;
+    const { cantidad } = req.body;
 
-  await supabase
-    .from("carrito_producto")
-    .update({ cantidad })
-    .eq("id_carrito_producto", itemId);
+    // Validar entrada
+    if (!itemId || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: "itemId y userId son requeridos"
+      });
+    }
 
-  res.json({ success: true });
+    if (!cantidad || cantidad < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "La cantidad debe ser mayor a 0"
+      });
+    }
+
+    // Obtener el carrito del usuario
+    const { data: carrito, error: carritoError } = await supabase
+      .from("carrito")
+      .select("id_carrito")
+      .eq("id_usuario", userId)
+      .single();
+
+    if (carritoError || !carrito) {
+      return res.status(404).json({
+        success: false,
+        message: "Carrito no encontrado"
+      });
+    }
+
+    // Actualizar la cantidad
+    const { error } = await supabase
+      .from("carrito_producto")
+      .update({ cantidad })
+      .eq("id_carrito", carrito.id_carrito)
+      .eq("id_producto", itemId);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({ success: true, message: "Cantidad actualizada" });
+  } catch (error) {
+    console.error("Error al actualizar cantidad:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar la cantidad del producto"
+    });
+  }
 };
 
 export const deleteItem = async (req, res) => {
-    const { itemId } = req.params;
+  try {
+    const { itemId, userId } = req.params;
 
-  await supabase
+    // Obtener el carrito del usuario
+    const { data: carrito, error: carritoError } = await supabase
+    .from("carrito")
+    .select("id_carrito")
+    .eq("id_usuario", userId)
+    .single();
+
+    if (carritoError || !carrito) {
+      return res.status(404).json({ success: false, message: "Carrito no encontrado" });
+    }
+
+    // Eliminar el item del carrito
+    const { error } = await supabase
     .from("carrito_producto")
     .delete()
-    .eq("id_carrito_producto", itemId);
+    .eq("id_carrito", carrito.id_carrito)
+    .eq("id_producto", itemId);
+
+    if (error) {
+      throw error;
+    }
 
   res.json({ success: true });
+  } catch (error) {
+    console.error("Error al eliminar el item del carrito:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar el item del carrito",
+    });
+  }
 };
 
 export const clearCart = async (req, res) => {
