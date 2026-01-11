@@ -18,6 +18,7 @@ export const crearProducto = async (req, res) => {
 		nombre,
 		descripcion,
 		precio_base,
+		cantidad_disponible,
 		id_usuario,
 		estado = "activo",
 		embedding,
@@ -29,8 +30,16 @@ export const crearProducto = async (req, res) => {
 			.json({ message: "Nombre y precio_base son obligatorios" });
 	}
 
+	const stockInicial = Number(cantidad_disponible);
+
+	if (!Number.isInteger(stockInicial) || stockInicial < 0) {
+	return res.status(400).json({
+		message: "cantidad_disponible debe ser un entero >= 0",
+		});
+	}
+
 	try {
-		const { data, error } = await supabase
+		const { data: producto, error } = await supabase
 			.from("producto")
 			.insert([
 				{
@@ -45,14 +54,37 @@ export const crearProducto = async (req, res) => {
 			.select()
 			.single();
 
+			const { error: inventarioError } = await supabase
+			.from("inventario")
+			.insert({
+				id_producto: producto.id_producto,
+				cantidad_disponible: stockInicial,
+				ultima_actualizacion: new Date().toISOString(),
+			});
+
+			
+
+			if (inventarioError) {
+			console.error("Error creando inventario:", inventarioError);
+			return res.status(500).json({
+				message: "Producto creado pero error al crear inventario",
+			});
+			}
+
 		if (error) {
 			return res.status(400).json({ error: error.message });
 		}
 
+		console.log("BODY PRODUCTO:", req.body);
+
 		return res.status(201).json({
 			message: "Producto creado exitosamente",
-			producto: data,
+			producto,
+			inventario: {
+				cantidad_disponible: stockInicial,
+			}
 		});
+		
 	} catch (error) {
 		console.error("Error al crear producto:", error);
 		return res.status(500).json({
