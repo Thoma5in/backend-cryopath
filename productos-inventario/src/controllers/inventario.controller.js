@@ -59,6 +59,8 @@ export const getInventarioByProducto = async (req, res) => {
  * AUTENTICADO (cualquier usuario)
  * Crea inventario inicial para un producto
  */
+
+/** 
 export const createInventario = async (req, res) => {
     const { id_producto, cantidad_disponible } = req.body;
 
@@ -122,6 +124,7 @@ export const createInventario = async (req, res) => {
         });
     }
 };
+*/
 
 
 /**
