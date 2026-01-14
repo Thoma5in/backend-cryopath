@@ -4,6 +4,7 @@ import { supabase } from "./config/supabase.js";
 import productosRoutes from "./routes/productos.routes.js";
 import storageProductosRoutes from "./routes/storageProductos.routes.js";
 import inventarioRoutes from "./routes/inventario.routes.js";
+import categoriasRoutes from "./routes/categorias.routes.js";
 
 
 const app = express();
@@ -39,6 +40,8 @@ app.use("/productos", productosRoutes);
 app.use("/productos", storageProductosRoutes);
 // Rutas de inventario
 app.use("/inventario", inventarioRoutes);
+// Ruta de categorias
+app.use("/categorias", categoriasRoutes);
 
 
 export default app;
