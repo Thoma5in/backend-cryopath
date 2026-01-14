@@ -16,7 +16,8 @@ export const getCart = async (req, res) => {
             id_producto,
             nombre,
             precio_base,
-            producto_imagen ( url )
+            producto_imagen ( url ),
+            inventario ( cantidad_disponible )
           )
         )
       `)
@@ -34,6 +35,7 @@ export const getCart = async (req, res) => {
         nombre: item.producto.nombre,
         precio: item.producto.precio_base,
         cantidad: item.cantidad,
+        stock: item.producto.inventario?.[0]?.cantidad_disponible ?? 0,
         imagen: item.producto.producto_imagen[0].url
       }))
 
@@ -82,22 +84,51 @@ export const addToCart = async (req, res) => {
 
     if (existeError) throw existeError
 
+    const {data: inventario, error: inventarioError} = await supabase
+    .from("inventario")
+    .select("cantidad_disponible")
+    .eq("id_producto", id_producto)
+    .single();
+
+    if (inventarioError || !inventario) {
+      return res.status(404).json({
+        success: false,
+        message: "Inventario no encontrado para el producto",
+      })
+    }
     //4 Si existe, actualizar cantidad
     if (existente) {
+        const nuevaCantidad = existente.cantidad + cantidad;
+
+        if (nuevaCantidad > inventario.cantidad_disponible) {
+          return res.status(400).json({
+            success: false,
+            message: "Cantidad solicitada excede el inventario disponible",
+          })
+        }
+
         await supabase
         .from("carrito_producto")
-        .update({cantidad: existente.cantidad + cantidad})
+        .update({cantidad: nuevaCantidad})
         .eq("id_carrito", carrito.id_carrito)
-        .eq("id_producto", id_producto)
+        .eq("id_producto", id_producto);
+
     } else {
         //5 Si no existe, agregar nuevo item
+        if (cantidad > inventario.cantidad_disponible) {
+          return res.status(400).json({
+            success: false,
+            message: "Cantidad solicitada excede el inventario disponible",
+          })
+        }
+
         await supabase
         .from("carrito_producto")
         .insert({
-            id_carrito: carrito.id_carrito,
-            id_producto,
-            cantidad
-        });
+          id_carrito: carrito.id_carrito,
+          id_producto,
+          cantidad
+        })
     }
 
     res.status(200).json({
@@ -131,6 +162,27 @@ export const updateQuantity = async (req, res) => {
         success: false,
         message: "La cantidad debe ser mayor a 0"
       });
+    }
+
+    // Consultar inventario
+    const {data: inventario, error: inventarioError} = await supabase
+    .from("inventario")
+    .select("cantidad_disponible")
+    .eq("id_producto", itemId)
+    .single();
+
+    if (inventarioError || !inventario) {
+      return res.status(404).json({
+        success: false,
+        message: "Inventario no encontrado para el producto",
+      })
+    }
+
+    if (cantidad > inventario.cantidad_disponible) {
+      return res.status(400).json({
+        success: false,
+        message: "Cantidad solicitada excede el inventario disponible",
+      })
     }
 
     // Obtener el carrito del usuario
