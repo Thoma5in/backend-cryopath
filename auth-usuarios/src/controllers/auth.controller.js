@@ -4,7 +4,7 @@ export const register = async (req, res) => {
     const { nombre, apellido, correo, password, direccion, telefono} = req.body;
 
     if (!nombre || !apellido || !correo || !password || !direccion || !telefono) {
-        return res.status(400).json({ message: 'Faltan datos obligatorios' });
+        return res.status(400).json({ message: 'Por favor completa todos los datos requeridos para crear tu cuenta.' });
     }
 
     try {
@@ -16,7 +16,7 @@ export const register = async (req, res) => {
     })
 
     if (authError) {
-        return res.status(400).json({ error: authError.message });
+        return res.status(400).json({ error: 'No pudimos crear tu cuenta en este momento. Revisa el correo y la contraseña o inténtalo de nuevo en unos minutos.' });
     }
 
     const userId = authData.user.id;
@@ -43,34 +43,30 @@ export const register = async (req, res) => {
     })
 
     if (rolError) {
-        return res.status(400).json({ error: rolError.message });
+        return res.status(400).json({ error: 'Tu usuario se creó, pero no pudimos asignar el rol. Intenta iniciar sesión y, si ves problemas, contáctanos.' });
     }
 
 
     if (dbError) {
-        return res.status(400).json({ error: dbError.message });
+        return res.status(400).json({ error: 'Tu cuenta se creó, pero no pudimos guardar todos tus datos. Intenta nuevamente o contáctanos para ayudarte.' });
     }
 
     return res.status(201).json({
-        message: 'Usuario registrado exitosamente'
+        message: 'Tu cuenta se creó correctamente. ¡Ya puedes iniciar sesión!'
     })
 
     } catch (error) {
         return res.status(500).json({
-            error: 'Error interno del servidor'
+            error: 'Algo salió mal mientras creábamos tu cuenta. Inténtalo de nuevo en unos minutos.'
         })
     }
-
-    
-    
-
 }
 
 export const login = async (req, res) => {
     const { correo, password } = req.body;
 
     if (!correo || !password) {
-        return res.status(400).json({ message: 'Correo y password son obligatorios' });
+        return res.status(400).json({ message: 'Necesitamos tu correo y contraseña para ingresar.' });
     }
 
     try {
@@ -80,7 +76,7 @@ export const login = async (req, res) => {
         });
 
         if (error || !data?.user) {
-            return res.status(401).json({ message: 'Credenciales inválidas' });
+            return res.status(401).json({ message: 'No pudimos iniciar sesión. Revisa tu correo y contraseña e inténtalo otra vez.' });
         }
 
         const { data: perfilData, error: perfilError } = await supabase
@@ -90,7 +86,7 @@ export const login = async (req, res) => {
             .single();
 
         if (perfilError) {
-            return res.status(500).json({ error: perfilError.message });
+            return res.status(500).json({ error: 'Iniciaste sesión, pero no pudimos cargar tu perfil. Recarga la página o vuelve a intentar en un momento.' });
         }
 
         return res.status(200).json({
@@ -102,7 +98,7 @@ export const login = async (req, res) => {
     } catch (error) {
         console.error('Error en login:', error);
         return res.status(500).json({
-            error: 'Error interno del servidor',
+            error: 'Ocurrió un problema para iniciar sesión. Inténtalo de nuevo en unos minutos.',
         });
     }
 };
