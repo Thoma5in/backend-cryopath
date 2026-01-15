@@ -139,18 +139,7 @@ export const eliminarCategoria = async (req, res) => {
         const { id } = req.params;
 
         // Verificar relación con productos
-        const { data: relaciones, error: errorRel } = await supabase
-            .from("producto")
-            .select("id_producto")
-            .eq("id_categoria", id);
-
-        if (errorRel) throw errorRel;
-
-        if (relaciones && relaciones.length > 0) {
-            return res.status(400).json({
-                message: "No se puede eliminar la categoría porque tiene productos asociados"
-            });
-        }
+  
 
         const { error } = await supabase
             .from("categoria")
