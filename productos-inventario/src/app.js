@@ -5,6 +5,7 @@ import productosRoutes from "./routes/productos.routes.js";
 import storageProductosRoutes from "./routes/storageProductos.routes.js";
 import inventarioRoutes from "./routes/inventario.routes.js";
 import categoriasRoutes from "./routes/categorias.routes.js";
+import productoCategoriasRoutes from "./routes/producto.categorias.routes.js";
 
 
 const app = express();
@@ -42,6 +43,8 @@ app.use("/productos", storageProductosRoutes);
 app.use("/inventario", inventarioRoutes);
 // Ruta de categorias
 app.use("/categorias", categoriasRoutes);
+// Rutas de relación producto-categoría
+app.use("/", productoCategoriasRoutes);
 
 
 export default app;
