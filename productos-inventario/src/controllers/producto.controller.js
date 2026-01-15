@@ -22,12 +22,19 @@ export const crearProducto = async (req, res) => {
 		id_usuario,
 		estado = "activo",
 		embedding,
+		id_categoria,
 	} = req.body;
 
 	if (!nombre || precio_base === undefined || precio_base === null) {
 		return res
 			.status(400)
 			.json({ message: "Nombre y precio_base son obligatorios" });
+	}
+
+	if (!id_categoria) {
+		return res
+			.status(400)
+			.json({ message: "id_categoria es obligatorio" });
 	}
 
 	const stockInicial = Number(cantidad_disponible);
@@ -75,6 +82,21 @@ export const crearProducto = async (req, res) => {
 			return res.status(400).json({ error: error.message });
 		}
 
+		// Guardar relación con categoría
+		const { error: categoriaError } = await supabase
+			.from("producto_categoria")
+			.insert({
+				id_producto: producto.id_producto,
+				id_categoria,
+			});
+
+		if (categoriaError) {
+			console.error("Error asignando categoría:", categoriaError);
+			return res.status(500).json({
+				message: "Producto creado pero error al asignar categoría",
+			});
+		}
+
 		console.log("BODY PRODUCTO:", req.body);
 
 		return res.status(201).json({
@@ -82,7 +104,8 @@ export const crearProducto = async (req, res) => {
 			producto,
 			inventario: {
 				cantidad_disponible: stockInicial,
-			}
+			},
+			id_categoria,
 		});
 		
 	} catch (error) {
@@ -119,6 +142,7 @@ export const editarProducto = async (req, res) => {
 		estado,
 		id_usuario,
 		embedding,
+		id_categoria,
 	} = req.body;
 
 	if (!id_producto) {
@@ -153,6 +177,37 @@ export const editarProducto = async (req, res) => {
 
 		if (!data) {
 			return res.status(404).json({ message: "Producto no encontrado" });
+		}
+
+		// Si se proporciona una nueva categoría, actualizar la relación
+		if (id_categoria !== undefined) {
+			// Eliminar la categoría anterior
+			const { error: deleteError } = await supabase
+				.from("producto_categoria")
+				.delete()
+				.eq("id_producto", id_producto);
+
+			if (deleteError) {
+				console.error("Error eliminando categoría anterior:", deleteError);
+				return res.status(500).json({
+					message: "Producto actualizado pero error al cambiar categoría",
+				});
+			}
+
+			// Insertar la nueva categoría
+			const { error: insertError } = await supabase
+				.from("producto_categoria")
+				.insert({
+					id_producto,
+					id_categoria,
+				});
+
+			if (insertError) {
+				console.error("Error asignando nueva categoría:", insertError);
+				return res.status(500).json({
+					message: "Producto actualizado pero error al asignar nueva categoría",
+				});
+			}
 		}
 
 		return res.status(200).json({
@@ -206,6 +261,15 @@ export const eliminarProducto = async (req, res) => {
 			.eq("id_producto", id_producto);
 		if (imagenError) {
 			return res.status(400).json({ error: imagenError.message });
+		}
+
+		// Eliminar relación con categorías
+		const { error: categoriaError } = await supabase
+			.from("producto_categoria")
+			.delete()
+			.eq("id_producto", id_producto);
+		if (categoriaError) {
+			return res.status(400).json({ error: categoriaError.message });
 		}
 
 		const { data, error } = await supabase
