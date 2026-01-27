@@ -3,14 +3,18 @@ import { supabase } from "../config/supabase.js";
 
 const extraerRutaObjeto = (url) => {
 	try {
-		const pathname = new URL(url).pathname;
-		const marcador = "/productos/";
-		const indice = pathname.indexOf(marcador);
-		return indice === -1 ? null : pathname.slice(indice + marcador.length);
+		const { pathname } = new URL(url);
+
+		// Divide exactamente después del bucket
+		const parts = pathname.split("/productos/");
+		if (parts.length !== 2) return null;
+
+		return parts[1]; // ruta interna del bucket
 	} catch {
 		return null;
 	}
 };
+
 
 
 export const crearProducto = async (req, res) => {
@@ -40,8 +44,8 @@ export const crearProducto = async (req, res) => {
 	const stockInicial = Number(cantidad_disponible);
 
 	if (!Number.isInteger(stockInicial) || stockInicial < 0) {
-	return res.status(400).json({
-		message: "cantidad_disponible debe ser un entero >= 0",
+		return res.status(400).json({
+			message: "cantidad_disponible debe ser un entero >= 0",
 		});
 	}
 
@@ -61,7 +65,7 @@ export const crearProducto = async (req, res) => {
 			.select()
 			.single();
 
-			const { error: inventarioError } = await supabase
+		const { error: inventarioError } = await supabase
 			.from("inventario")
 			.insert({
 				id_producto: producto.id_producto,
@@ -69,14 +73,14 @@ export const crearProducto = async (req, res) => {
 				ultima_actualizacion: new Date().toISOString(),
 			});
 
-			
 
-			if (inventarioError) {
+
+		if (inventarioError) {
 			console.error("Error creando inventario:", inventarioError);
 			return res.status(500).json({
 				message: "Producto creado pero error al crear inventario",
 			});
-			}
+		}
 
 		if (error) {
 			return res.status(400).json({ error: error.message });
@@ -107,7 +111,7 @@ export const crearProducto = async (req, res) => {
 			},
 			id_categoria,
 		});
-		
+
 	} catch (error) {
 		console.error("Error al crear producto:", error);
 		return res.status(500).json({
@@ -245,6 +249,8 @@ export const eliminarProducto = async (req, res) => {
 			imagenes
 				?.map(({ url }) => extraerRutaObjeto(url))
 				.filter(Boolean) ?? [];
+				
+		console.log("Rutas a eliminar del bucket:", rutasAlmacenadas);
 
 		if (rutasAlmacenadas.length) {
 			const { error: storageError } = await supabase.storage
