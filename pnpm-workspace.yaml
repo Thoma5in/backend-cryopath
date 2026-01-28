@@ -3,3 +3,4 @@ packages:
   - "productos-inventario"
   - "pedidos-pagos-carrito"
   - "ai-assistant"
+  - "mensajeria"
