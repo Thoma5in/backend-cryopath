@@ -3,9 +3,12 @@ import { supabase } from '../config/supabase.js';
 export const enviarMensaje = async (req, res) => {
   try {
     const id_usuario = req.user.id;
-    const { id_conversacion, contenido } = req.body;
 
-    if (!id_conversacion || !contenido) {
+
+    const id_conversacion = req.body.id_conversacion || req.params.id;
+    const { contenido } = req.body;
+
+    if (!id_conversacion || !contenido || !contenido.trim()) {
       return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
 

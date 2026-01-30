@@ -5,6 +5,6 @@ import { requireAuth } from '../../../auth-usuarios/src/middlewares/auth.middlew
 
 const router = Router();
 
-router.post('/mensajes', requireAuth, enviarMensaje);
+
 
 export default router;

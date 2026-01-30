@@ -147,13 +147,31 @@ export const obtenerConversacion = async (req, res) => {
             id_conversacion,
             id_usuario_pregunta,
             id_usuario_producto,
-            producto (
+            producto:producto (
             id_producto,
             nombre
+            ),
+            usuario_pregunta:usuario!conversacion_usuario_pregunta_fk (
+            id,
+            nombre,
+            apellido
+            ),
+            usuario_producto:usuario!conversacion_usuario_producto_fk (
+            id,
+            nombre,
+            apellido
             )
         `)
         .eq('id_conversacion', id_conversacion)
         .single();
+
+        console.log('CONV ERROR:', convError);
+        console.log('CONVERSACION:', conversacion);
+
+        const otroUsuario =
+        id_usuario === conversacion.id_usuario_pregunta
+            ? conversacion.usuario_producto
+            : conversacion.usuario_pregunta;
 
         if (convError || !conversacion) {
             return res.status(404).json({ error: 'Conversación no encontrada' });
@@ -172,18 +190,18 @@ export const obtenerConversacion = async (req, res) => {
         .select(`
             id_mensaje,
             contenido,
-            created_at,
+            fecha_envio,
             id_usuario_emisor
         `)
         .eq('id_conversacion', id_conversacion)
-        .order('created_at', { ascending: true });
-
+        .order('fecha_envio', { ascending: true });
         if (msgError) throw msgError;
 
         return res.json({
         conversacion: {
             id_conversacion: conversacion.id_conversacion,
-            producto: conversacion.producto
+            producto: conversacion.producto,
+            otro_usuario: otroUsuario
         },
         mensajes
         });
