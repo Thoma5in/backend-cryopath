@@ -1,5 +1,16 @@
 import { supabase } from "../config/supabase.js";
 
+const extraerRutaObjeto = (url) => {
+  try {
+    const { pathname } = new URL(url);
+    const parts = pathname.split("/productos/");
+    if (parts.length !== 2) return null;
+    return parts[1];
+  } catch {
+    return null;
+  }
+};
+
 export const uploadImagenProducto = async (req, res) => {
   const { id_producto } = req.params;
   const file = req.file;
@@ -55,5 +66,53 @@ export const uploadImagenProducto = async (req, res) => {
     return res.status(500).json({
       error: "Error interno del servidor",
     });
+  }
+};
+
+export const eliminarImagenesProducto = async (req, res) => {
+  const { id_producto } = req.params;
+
+  if (!id_producto) {
+    return res.status(400).json({ message: "El id_producto es obligatorio" });
+  }
+
+  try {
+    const { data: imagenes, error: obtenerImagenesError } = await supabase
+      .from("producto_imagen")
+      .select("url")
+      .eq("id_producto", id_producto);
+
+    if (obtenerImagenesError) {
+      return res.status(400).json({ error: obtenerImagenesError.message });
+    }
+
+    const rutasAlmacenadas =
+      imagenes?.map(({ url }) => extraerRutaObjeto(url)).filter(Boolean) ?? [];
+
+    if (rutasAlmacenadas.length) {
+      const { error: storageError } = await supabase.storage
+        .from("productos")
+        .remove(rutasAlmacenadas);
+      if (storageError) {
+        return res.status(400).json({ error: storageError.message });
+      }
+    }
+
+    const { error: imagenError } = await supabase
+      .from("producto_imagen")
+      .delete()
+      .eq("id_producto", id_producto);
+
+    if (imagenError) {
+      return res.status(400).json({ error: imagenError.message });
+    }
+
+    return res.status(200).json({
+      message: "Imágenes eliminadas correctamente",
+      eliminadas: rutasAlmacenadas.length,
+    });
+  } catch (error) {
+    console.error("Error al eliminar imágenes del producto:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };

@@ -415,30 +415,33 @@ export const obtenerProductosPorSupercategoria = async (req, res) => {
         if (error) throw error;
 
         // Procesar y aplanar los datos
-        let productos = [];
-        const productosVistos = new Set(); // Para evitar duplicados
+        const productos = [];
+        const productosVistos = new Set();
 
-        data.forEach(item => {
-            if (item.categoria && item.categoria.producto_categoria) {
-                item.categoria.producto_categoria.forEach(pc => {
-                    if (pc.producto) {
-                        // Filtrar por estado si se proporciona
-                        if (!estado || pc.producto.estado === estado) {
-                            // Evitar duplicados si un producto está en múltiples categorías
-                            if (!productosVistos.has(pc.producto.id_producto)) {
-                                productos.push({
-                                    ...pc.producto,
-                                    id_categoria: item.categoria.id_categoria,
-                                    categoria_nombre: item.categoria.nombre,
-                                    categoria_descripcion: item.categoria.descripcion
-                                });
-                                productosVistos.add(pc.producto.id_producto);
-                            }
-                        }
-                    }
+        for (const item of data) {
+            const categoria = item.categoria;
+            if (!categoria?.producto_categoria) continue;
+
+            for (const pc of categoria.producto_categoria) {
+                const producto = pc.producto;
+                if (!producto) continue;
+
+                if (estado && producto.estado !== estado) continue;
+
+                const id = producto.id_producto;
+                if (productosVistos.has(id)) continue;
+
+                productos.push({
+                    ...producto,
+                    id_categoria: categoria.id_categoria,
+                    categoria_nombre: categoria.nombre,
+                    categoria_descripcion: categoria.descripcion
                 });
+
+                productosVistos.add(id);
             }
-        });
+        }
+
 
         // Aplicar paginación
         const total = productos.length;

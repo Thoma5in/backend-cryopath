@@ -331,3 +331,26 @@ export const obtenerImagenProducto = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor" });
 	}
 };
+
+export const obtenerImagenesProducto = async (req, res) => {
+	const { id_producto } = req.params;
+	if (!id_producto) {
+		return res.status(400).json({ message: "El id_producto es obligatorio" });
+	}
+	try {
+		const { data, error } = await supabase
+			.from("producto_imagen")
+			.select("id_imagen, url")
+			.eq("id_producto", id_producto)
+			.order("id_imagen", { ascending: false });
+
+		if (error) {
+			return res.status(400).json({ error: error.message });
+		}
+
+		return res.status(200).json({ imagenes: data ?? [] });
+	} catch (err) {
+		console.error("Error al obtener imágenes de producto:", err);
+		return res.status(500).json({ error: "Error interno del servidor" });
+	}
+};
