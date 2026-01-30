@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { uploadImagenProducto } from "../controllers/storageProductos.controller.js";
+import { uploadImagenProducto, eliminarImagenesProducto } from "../controllers/storageProductos.controller.js";
 import { obtenerImagenProducto, obtenerImagenesProducto } from "../controllers/producto.controller.js";
 import { requireWorkerOrAdmin } from "../../../auth-usuarios/src/middlewares/worker.middleware.js";
 
@@ -25,6 +25,13 @@ router.get(
 router.get(
   "/:id_producto/imagenes",
   obtenerImagenesProducto
+);
+
+// Endpoint para eliminar todas las imágenes de un producto
+router.delete(
+  "/:id_producto/imagenes",
+  requireWorkerOrAdmin,
+  eliminarImagenesProducto
 );
 
 export default router;
