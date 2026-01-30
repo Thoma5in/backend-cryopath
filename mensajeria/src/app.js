@@ -1,5 +1,6 @@
 import conversacionesRoutes from './routes/conversaciones.routes.js';
 import mensajesRoutes from './routes/mensajes.routes.js';
+import notificacionesRoutes from './routes/notificaciones.routes.js';
 import express from 'express';
 import cors from 'cors';
 
@@ -13,10 +14,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'mensajeria' })
 })
 
-app.use('/', conversacionesRoutes)
+app.use('/mensajes', mensajesRoutes)
 app.use('/conversaciones', conversacionesRoutes)
-app.use('/conversaciones/:id', conversacionesRoutes)
-app.use('/mensajes', mensajesRoutes);
-app.use('/mensajes', mensajesRoutes);
+app.use('/notificaciones', notificacionesRoutes);
 
 export default app;
