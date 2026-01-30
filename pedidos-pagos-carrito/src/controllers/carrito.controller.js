@@ -29,15 +29,19 @@ export const getCart = async (req, res) => {
       }
 
       //Normalizar salida para el frontend
-      const items = data.carrito_producto.map(item => ({
-        id: item.producto.id_producto,
-        id_producto: item.producto.id_producto,
-        nombre: item.producto.nombre,
-        precio: item.producto.precio_base,
-        cantidad: item.cantidad,
-        stock: item.producto.inventario?.[0]?.cantidad_disponible ?? 0,
-        imagen: item.producto.producto_imagen[0].url
-      }))
+      const items = data.carrito_producto.map(item => {
+        const imagenes = item.producto.producto_imagen?.map(imagen => imagen.url) ?? [];
+        return {
+          id: item.producto.id_producto,
+          id_producto: item.producto.id_producto,
+          nombre: item.producto.nombre,
+          precio: item.producto.precio_base,
+          cantidad: item.cantidad,
+          stock: item.producto.inventario?.[0]?.cantidad_disponible ?? 0,
+          imagen: imagenes[0] ?? null,
+          imagenes,
+        };
+      })
 
       res.json({ success: true, data: items })
     } catch (error) {
