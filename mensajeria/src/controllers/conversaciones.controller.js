@@ -92,23 +92,33 @@ export const listarConversaciones = async (req, res) => {
         .from('conversacion')
          .select(`
             id_conversacion,
-            created_at,
+            fecha_creacion,
             producto (
             id_producto,
             nombre
             ),
             id_usuario_pregunta,
             id_usuario_producto,
+            usuario_pregunta:usuario!conversacion_usuario_pregunta_fk (
+            id,
+            nombre,
+            apellido
+            ),
+            usuario_producto:usuario!conversacion_usuario_producto_fk (
+            id,
+            nombre,
+            apellido
+            ),
             mensaje (
             contenido,
-            created_at,
+            fecha_envio,
             id_usuario_emisor
             )
         `)
         .or (
             `id_usuario_pregunta.eq.${id_usuario},id_usuario_producto.eq.${id_usuario}`
         )
-        .order('created_at', { foreignTable: 'mensaje', ascending: false })
+        .order('fecha_envio', { foreignTable: 'mensaje', ascending: false })
 
         if(error) throw error
 
@@ -116,11 +126,19 @@ export const listarConversaciones = async (req, res) => {
         const conversaciones = data.map(conv => {
             const ultimoMensaje = conv.mensaje?.[0] || null;
 
+
+            const otroUsuario = 
+            conv.id_usuario_pregunta === id_usuario
+            ? conv.usuario_producto
+            : conv.usuario_pregunta;
+
             return {
                 id_conversacion: conv.id_conversacion,
                 producto: conv.producto,
+                otro_usuario: otroUsuario,
                 ultimo_mensaje: ultimoMensaje?.contenido || null,
-                fecha_ultimo_mensaje: ultimoMensaje?.created_at || conv.created_at,
+                ultimo_mensaje_emisor_id: ultimoMensaje?.id_usuario_emisor || null,
+                fecha_ultimo_mensaje: ultimoMensaje?.fecha_envio || conv.fecha_creacion,
                 rol:
                 conv.id_usuario_pregunta === id_usuario
                 ? 'comprador'
@@ -165,17 +183,14 @@ export const obtenerConversacion = async (req, res) => {
         .eq('id_conversacion', id_conversacion)
         .single();
 
-        console.log('CONV ERROR:', convError);
-        console.log('CONVERSACION:', conversacion);
+        if (convError || !conversacion) {
+            return res.status(404).json({ error: 'Conversación no encontrada' });
+        }
 
         const otroUsuario =
         id_usuario === conversacion.id_usuario_pregunta
             ? conversacion.usuario_producto
             : conversacion.usuario_pregunta;
-
-        if (convError || !conversacion) {
-            return res.status(404).json({ error: 'Conversación no encontrada' });
-        }
 
         const esParticipante =
         conversacion.id_usuario_pregunta === id_usuario || conversacion.id_usuario_producto === id_usuario;

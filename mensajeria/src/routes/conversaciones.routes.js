@@ -11,9 +11,9 @@ const router = Router();
 
 router.post('/', requireAuth, crearConversacion);
 router.get('/', requireAuth, listarConversaciones);
+router.get('/no-leidos', requireAuth, contarNoLeidos)
 router.get('/:id', requireAuth, obtenerConversacion);
 router.post('/:id/leido', requireAuth, marcarMensajesLeidos);
-router.get('/no-leidos', requireAuth, contarNoLeidos)
 router.post(
   '/:id/mensajes',
   requireAuth,
