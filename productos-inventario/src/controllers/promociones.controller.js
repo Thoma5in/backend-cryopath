@@ -1,5 +1,35 @@
 import {supabase} from '../config/supabase.js';
 
+// Obtener promociones con sus categorías asociadas
+export const obtenerPromocionesConCategorias = async (req, res) => {
+	try {
+		// Hacemos join entre promociones, promociones_categorias y categoria
+		const { data, error } = await supabase
+			.from('promociones')
+			.select(`*, promociones_categorias:promociones_categorias(id_categoria, categoria:categoria(id_categoria, nombre, descripcion))`);
+
+		if (error) {
+			return res.status(400).json({ error: error.message });
+		}
+
+		// Formatear para que cada promoción tenga un array de categorías
+		const promociones = data.map(promocion => {
+			const categorias = (promocion.promociones_categorias || []).map(rel => rel.categoria).filter(Boolean);
+			// Eliminar el campo promociones_categorias para limpiar la respuesta
+			const { promociones_categorias, ...rest } = promocion;
+			return { ...rest, categorias };
+		});
+
+		return res.status(200).json({ promociones });
+	} catch (error) {
+		console.error("Error al obtener promociones con categorías:", error);
+		return res.status(500).json({
+			error: "Error interno del servidor",
+		});
+	}
+};
+
+
 export const obtenerPromociones = async (req, res) => {
 	try {
 		const { data, error } = await supabase.from("promociones").select("*");
