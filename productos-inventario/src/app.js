@@ -7,6 +7,7 @@ import inventarioRoutes from "./routes/inventario.routes.js";
 import categoriasRoutes from "./routes/categorias.routes.js";
 import productoCategoriasRoutes from "./routes/producto.categorias.routes.js";
 import supercategoriasRoutes from "./routes/supercategorias.routes.js";
+import promocionesRoutes from "./routes/promociones.routes.js";
 
 
 const app = express();
@@ -48,6 +49,7 @@ app.use("/categorias", categoriasRoutes);
 app.use("/supercategorias", supercategoriasRoutes);
 // Rutas de relación producto-categoría
 app.use("/", productoCategoriasRoutes);
-
+// Rutas de promociones
+app.use("/promociones", promocionesRoutes);
 
 export default app;
