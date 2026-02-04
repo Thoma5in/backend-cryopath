@@ -199,6 +199,14 @@ export const obtenerConversacion = async (req, res) => {
             return res.status(403).json({ error: 'Acceso denegado a esta conversación' });
         }
 
+        //Marcar mensajes como leídos
+        await supabase
+        .from('mensaje')
+        .update({leido: true})
+        .eq('id_conversacion', id_conversacion)
+        .neq('id_usuario_emisor', id_usuario)
+        .eq('leido', false);
+
         //Obtener mensajes
         const { data: mensajes, error: msgError } = await supabase
         .from('mensaje')
@@ -206,7 +214,8 @@ export const obtenerConversacion = async (req, res) => {
             id_mensaje,
             contenido,
             fecha_envio,
-            id_usuario_emisor
+            id_usuario_emisor,
+            leido
         `)
         .eq('id_conversacion', id_conversacion)
         .order('fecha_envio', { ascending: true });
@@ -227,6 +236,8 @@ export const obtenerConversacion = async (req, res) => {
         details: error.message
         });
     }
+
+    
 }
 
 export const marcarMensajesLeidos = async (req, res) => {
