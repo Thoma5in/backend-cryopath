@@ -5,11 +5,18 @@ const extraerRutaObjeto = (url) => {
 	try {
 		const { pathname } = new URL(url);
 
-		// Divide exactamente después del bucket
-		const parts = pathname.split("/productos/");
-		if (parts.length !== 2) return null;
+		// Extraer ruta interna justo después del bucket `productos`
+		const marker = "/productos/";
+		const idx = pathname.indexOf(marker);
+		if (idx === -1) return null;
 
-		return parts[1]; // ruta interna del bucket
+		const internal = pathname.slice(idx + marker.length);
+		// `pathname` viene con % encoding; storage.remove() espera la key sin encode
+		try {
+			return decodeURIComponent(internal);
+		} catch {
+			return internal;
+		}
 	} catch {
 		return null;
 	}
@@ -352,5 +359,46 @@ export const obtenerImagenesProducto = async (req, res) => {
 	} catch (err) {
 		console.error("Error al obtener imágenes de producto:", err);
 		return res.status(500).json({ error: "Error interno del servidor" });
+	}
+};
+
+export const buscarProductos = async (req, res) => {
+	try {
+		const { q } = req.query;
+
+		if (!q || q.trim().length < 2) {
+			return res.json([]);
+		}
+
+		const { data, error } = await supabase
+			.from("producto")
+			.select(`
+        id_producto,
+        nombre,
+        precio_base,
+        producto_imagen (
+          url
+        )
+      `)
+			.eq("estado", "activo")
+			.ilike("nombre", `%${q}%`)
+			.limit(10);
+
+		if (error) throw error;
+
+		const productos = data.map(producto => ({
+			id_producto: producto.id_producto,
+			nombre: producto.nombre,
+			precio_base: producto.precio_base,
+			imagen: producto.producto_imagen?.[0]?.url || "/img/no-image.png"
+		}));
+
+		return res.json(productos);
+
+	} catch (error) {
+		console.error("Error en búsqueda:", error);
+		return res.status(500).json({
+			message: "Error al buscar productos"
+		});
 	}
 };

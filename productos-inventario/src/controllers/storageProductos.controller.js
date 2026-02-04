@@ -3,9 +3,16 @@ import { supabase } from "../config/supabase.js";
 const extraerRutaObjeto = (url) => {
   try {
     const { pathname } = new URL(url);
-    const parts = pathname.split("/productos/");
-    if (parts.length !== 2) return null;
-    return parts[1];
+    const marker = "/productos/";
+    const idx = pathname.indexOf(marker);
+    if (idx === -1) return null;
+
+    const internal = pathname.slice(idx + marker.length);
+    try {
+      return decodeURIComponent(internal);
+    } catch {
+      return internal;
+    }
   } catch {
     return null;
   }
