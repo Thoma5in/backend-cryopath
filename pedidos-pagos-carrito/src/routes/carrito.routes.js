@@ -4,7 +4,8 @@ import {
   addToCart,
   updateQuantity,
   deleteItem,
-  clearCart
+  clearCart,
+  getCartByCategory
 } from "../controllers/carrito.controller.js";
 
 const router = Router();
@@ -15,6 +16,9 @@ const router = Router();
 
 // Obtener carrito por usuario
 router.get("/:userId", getCart);
+
+// Obtener carrito agrupado por categoría
+router.get("/:userId/categorias", getCartByCategory);
 
 // Agregar item al carrito
 router.post("/:userId/items", addToCart);

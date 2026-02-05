@@ -401,4 +401,75 @@ export const buscarProductos = async (req, res) => {
 			message: "Error al buscar productos"
 		});
 	}
+
+	
+};
+
+
+export const obtenerProductosRelacionados = async (req, res) => {
+	const { id_producto } = req.params;
+
+	if (!id_producto) {
+		return res.status(400).json({
+			message: "El id_producto es obligatorio"
+		});
+	}
+
+	try {
+		//  Obtener categoría del producto
+		const { data: categoria, error: categoriaError } = await supabase
+			.from("producto_categoria")
+			.select("id_categoria")
+			.eq("id_producto", id_producto)
+			.single();
+
+		if (categoriaError || !categoria) {
+			return res.status(404).json({
+				message: "El producto no tiene categoría asignada"
+			});
+		}
+
+		// Obtener productos de la misma categoría
+		const { data, error } = await supabase
+			.from("producto_categoria")
+			.select(`
+				id_producto,
+				producto (
+					id_producto,
+					nombre,
+					precio_base,
+					estado,
+					producto_imagen (
+						url
+					)
+				)
+			`)
+			.eq("id_categoria", categoria.id_categoria)
+			.neq("id_producto", id_producto);
+
+		if (error) throw error;
+
+		// Normalizar respuesta
+		const productosRelacionados = (data || [])
+			.map(item => item.producto)
+			.filter(p => p && p.estado === "activo")
+			.map(p => ({
+				id_producto: p.id_producto,
+				nombre: p.nombre,
+				precio_base: p.precio_base,
+				imagen: p.producto_imagen?.[0]?.url || "/img/no-image.png"
+			}));
+
+		return res.status(200).json({
+			id_producto,
+			total: productosRelacionados.length,
+			productos: productosRelacionados
+		});
+
+	} catch (error) {
+		console.error("Error productos relacionados:", error);
+		return res.status(500).json({
+			message: "Error al obtener productos relacionados"
+		});
+	}
 };

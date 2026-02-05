@@ -17,7 +17,11 @@ export const getCart = async (req, res) => {
             nombre,
             precio_base,
             producto_imagen ( url ),
-            inventario ( cantidad_disponible )
+            inventario ( cantidad_disponible ),
+            producto_categoria (
+              id_categoria,
+              categoria:categoria ( nombre )
+            )
           )
         )
       `)
@@ -31,6 +35,7 @@ export const getCart = async (req, res) => {
       //Normalizar salida para el frontend
       const items = data.carrito_producto.map(item => {
         const imagenes = item.producto.producto_imagen?.map(imagen => imagen.url) ?? [];
+        const pc = item.producto.producto_categoria?.[0] ?? null;
         return {
           id: item.producto.id_producto,
           id_producto: item.producto.id_producto,
@@ -40,6 +45,8 @@ export const getCart = async (req, res) => {
           stock: item.producto.inventario?.[0]?.cantidad_disponible ?? 0,
           imagen: imagenes[0] ?? null,
           imagenes,
+          id_categoria: pc?.id_categoria ?? null,
+          categoria_nombre: pc?.categoria?.nombre ?? null,
         };
       })
 
@@ -51,7 +58,6 @@ export const getCart = async (req, res) => {
         });
     }
   }
-
 
 export const addToCart = async (req, res) => {
   try {
@@ -277,4 +283,69 @@ export const clearCart = async (req, res) => {
   }
 
   res.json({ success: true });
+};
+
+export const getCartByCategory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data, error } = await supabase
+      .from("carrito")
+      .select(`
+        id_carrito,
+        carrito_producto (
+          id_producto,
+          cantidad,
+          producto (
+            id_producto,
+            nombre,
+            precio_base,
+            producto_imagen ( url ),
+            inventario ( cantidad_disponible ),
+            producto_categoria (
+              id_categoria,
+              categoria:categoria ( nombre )
+            )
+          )
+        )
+      `)
+      .eq("id_usuario", userId)
+      .single();
+
+    if (error || !data) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const grouped = {};
+
+    for (const cp of data.carrito_producto) {
+      const producto = cp.producto;
+      const imagenes = producto.producto_imagen?.map(i => i.url) ?? [];
+      const pc = producto.producto_categoria?.[0] ?? null;
+      const catId = pc?.id_categoria ?? "sin-categoria";
+      const catName = pc?.categoria?.nombre ?? "Sin categoría";
+
+      if (!grouped[catId]) {
+        grouped[catId] = { id_categoria: pc?.id_categoria ?? null, categoria_nombre: catName, items: [] };
+      }
+
+      grouped[catId].items.push({
+        id: producto.id_producto,
+        id_producto: producto.id_producto,
+        nombre: producto.nombre,
+        precio: producto.precio_base,
+        cantidad: cp.cantidad,
+        stock: producto.inventario?.[0]?.cantidad_disponible ?? 0,
+        imagen: imagenes[0] ?? null,
+        imagenes,
+      });
+    }
+
+    const categorias = Object.values(grouped);
+
+    res.json({ success: true, data: categorias });
+  } catch (error) {
+    console.error("Error al obtener carrito por categoría:", error);
+    res.status(500).json({ success: false, message: "Error al obtener carrito por categoría" });
+  }
 };
