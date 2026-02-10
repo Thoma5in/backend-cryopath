@@ -6,6 +6,7 @@ import { eliminarProducto } from "../controllers/producto.controller.js";
 import { buscarProductos } from "../controllers/producto.controller.js";
 import {
 	obtenerImagenProducto,
+	obtenerProductosRelacionados,
 } from "../controllers/producto.controller.js";
 import { requireWorkerOrAdmin } from "../../../auth-usuarios/src/middlewares/worker.middleware.js";
 
@@ -24,6 +25,8 @@ router.put("/:id_producto", requireWorkerOrAdmin, editarProducto);
 router.delete("/:id_producto", requireWorkerOrAdmin, eliminarProducto);
 // Endpoint para obtener la imagen de un producto
 router.get("/:id_producto/imagen", obtenerImagenProducto);
+// Endpoint para obtener productos relacionados
+router.get("/:id_producto/relacionados", obtenerProductosRelacionados);
 
 
 export default router;
