@@ -17,6 +17,39 @@ export const crearResena = async (req, res) => {
 	}
 
 	try {
+		// Verificar si el usuario ha comprado este producto
+		console.log("🔍 [RESENA] Verificando compra - id_usuario:", id_usuario, "id_producto:", id_producto);
+		
+		const { data: compraExistente, error: compraError } = await supabase
+			.from("orden")
+			.select(`
+				id_orden,
+				orden_detalle!inner (
+					id_producto
+				)
+			`)
+			.eq("id_usuario", id_usuario)
+			.eq("orden_detalle.id_producto", id_producto)
+			.in("estado", ["completado", "entregado", "pagado"])
+			.limit(1);
+
+		console.log("📦 [RESENA] Resultado compra:", compraExistente);
+		console.log("❌ [RESENA] Error compra:", compraError);
+
+		if (compraError) {
+			console.error("Error al verificar compra:", compraError);
+			return res.status(500).json({
+				error: "Error al verificar la compra del producto",
+				debug: compraError.message
+			});
+		}
+
+		if (!compraExistente || compraExistente.length === 0) {
+			return res.status(403).json({
+				message: "Solo puedes dejar una reseña si has comprado este producto"
+			});
+		}
+
 		// Verificar si el usuario ya tiene una reseña para este producto
 		const { data: resenaExistente } = await supabase
 			.from("producto_resena")
