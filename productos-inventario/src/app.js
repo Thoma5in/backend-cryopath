@@ -8,6 +8,7 @@ import categoriasRoutes from "./routes/categorias.routes.js";
 import productoCategoriasRoutes from "./routes/producto.categorias.routes.js";
 import supercategoriasRoutes from "./routes/supercategorias.routes.js";
 import promocionesRoutes from "./routes/promociones.routes.js";
+import resenasRoutes from "./routes/resenas.routes.js";
 
 
 const app = express();
@@ -51,5 +52,7 @@ app.use("/supercategorias", supercategoriasRoutes);
 app.use("/", productoCategoriasRoutes);
 // Rutas de promociones
 app.use("/promociones", promocionesRoutes);
+// Rutas de reseñas
+app.use("/resenas", resenasRoutes);
 
 export default app;
