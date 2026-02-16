@@ -1,5 +1,5 @@
 // src/controllers/carrito.controller.js
-import supabase from "../config/supabase.js";
+import {supabase} from "../config/supabase.js";
 
 export const getCart = async (req, res) => {
   try {
