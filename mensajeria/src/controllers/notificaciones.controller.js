@@ -3,7 +3,7 @@ import {supabase} from '../config/supabase.js'
 export const listarNotificaciones = async (req, res) => {
     try {
         
-        console.log('USER AUTH: ', req.user);
+        // console.log('USER AUTH: ', req.user);
         const id_usuario = req.user.id; //Usuario autenticado
 
         
