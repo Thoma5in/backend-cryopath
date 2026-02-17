@@ -4,11 +4,13 @@ import { supabase } from "./config/supabase.js";
 import carritoRoutes from "./routes/carrito.routes.js";
 import pagosRoutes from "./routes/pagos.routes.js";
 import ordenRoutes from "./routes/orden.routes.js";
+import { responseTimeMiddleware } from "./middlewares/responseTime.middleware.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(responseTimeMiddleware);
 
 app.get("/health", (req, res) => {
   res.json({ status: "Pedidos, Pagos & Carrito OK" });

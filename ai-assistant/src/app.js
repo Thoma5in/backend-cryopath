@@ -1,12 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import chatRoutes from './routes/chat.routes.js';
+import { responseTimeMiddleware } from './middlewares/responseTime.middleware.js';
 
 const app = express();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(responseTimeMiddleware);
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas
