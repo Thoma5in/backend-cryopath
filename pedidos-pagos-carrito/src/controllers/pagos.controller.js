@@ -27,10 +27,7 @@ export const crearOrdenPaypal = async (req, res) => {
             return res.status(400).json({error: "Orden no está en estado pendiente. No válida para pago."});
         }
 
-        await supabase
-        .from("orden")
-        .update({paypal_order_id: null})
-        .eq("id_orden", idOrden)
+        
 
         //Obtener token de acceso
         const accessToken = await getAccessToken();
@@ -58,6 +55,11 @@ export const crearOrdenPaypal = async (req, res) => {
             },
         }
     )
+
+    await supabase
+        .from("orden")
+        .update({paypal_order_id: response.data.id})
+        .eq("id_orden", idOrden)
 
     const approveLink = response.data.links.find(
         (link) => link.rel === "approve"
@@ -118,7 +120,7 @@ export const capturarPagoPaypal = async (req, res) => {
         //Actualizar estado de orden
         await supabase
         .from("orden")
-        .update({estado: "pagada"})
+        .update({estado: "PAGADA"})
         .eq("id_orden", orden.id_orden)
 
         //Descontar Inventario
@@ -133,6 +135,9 @@ export const capturarPagoPaypal = async (req, res) => {
                 cantidad: item.cantidad,
             })
         }
+
+        console.log("PaypalOrderId recibido:", paypalOrderId);
+        console.log("Orden encontrada:", orden);
 
         res.json({message: "Pago capturado y orden actualizada exitosamente"});
     } catch (error) {
