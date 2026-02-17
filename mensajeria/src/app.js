@@ -3,11 +3,13 @@ import mensajesRoutes from './routes/mensajes.routes.js';
 import notificacionesRoutes from './routes/notificaciones.routes.js';
 import express from 'express';
 import cors from 'cors';
+import { responseTimeMiddleware } from './middlewares/responseTime.middleware.js';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(responseTimeMiddleware);
 
 
 app.get('/health', (req, res) => {

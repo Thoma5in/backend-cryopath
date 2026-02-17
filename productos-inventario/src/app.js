@@ -9,12 +9,14 @@ import productoCategoriasRoutes from "./routes/producto.categorias.routes.js";
 import supercategoriasRoutes from "./routes/supercategorias.routes.js";
 import promocionesRoutes from "./routes/promociones.routes.js";
 import resenasRoutes from "./routes/resenas.routes.js";
+import { responseTimeMiddleware } from "./middlewares/responseTime.middleware.js";
 
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(responseTimeMiddleware);
 
 app.get("/health", async (req, res) => {
   try {
