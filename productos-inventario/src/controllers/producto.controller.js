@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase.js";
+import { getCached, setCached, invalidateCache, invalidatePattern } from "../services/cache.service.js";
 
 
 const extraerRutaObjeto = (url) => {
@@ -130,11 +131,61 @@ export const crearProducto = async (req, res) => {
 
 export const obtenerProductos = async (req, res) => {
 	try {
-		const { data, error } = await supabase.from("producto").select("*");
+		const limit = Math.min(Number(req.query.limit) || 20, 100); // Max 100
+		const offset = Math.max(Number(req.query.offset) || 0, 0);
+		const cacheKey = `productos:all:${limit}:${offset}`;
+
+		console.log(`📦 GET /productos - limit: ${limit}, offset: ${offset}`);
+
+		// Intentar obtener del caché
+		const cached = await getCached(cacheKey);
+		if (cached) {
+			console.log(`✅ CACHE HIT - Devolviendo ${cached.productos.length} productos desde Redis`);
+			return res.status(200).json({
+				...cached,
+				_cache: "HIT" // Indicador de que vino del caché
+			});
+		}
+
+		console.log(`❌ CACHE MISS - Obteniendo de Supabase...`);
+
+		// Obtener total de productos
+		const { count, error: countError } = await supabase
+			.from("producto")
+			.select("*", { count: "exact", head: true });
+
+		if (countError) {
+			return res.status(400).json({ error: countError.message });
+		}
+
+		// Obtener productos con paginación
+		const { data, error } = await supabase
+			.from("producto")
+			.select("*")
+			.range(offset, offset + limit - 1);
+
 		if (error) {
 			return res.status(400).json({ error: error.message });
 		}
-		return res.status(200).json({ productos: data });
+
+		const response = {
+			productos: data,
+			paginacion: {
+				total: count,
+				limit,
+				offset,
+				paginas: Math.ceil(count / limit),
+			},
+		};
+
+		// Cachear resultado
+		await setCached(cacheKey, response, "productos");
+		console.log(`💾 CACHE STORED - ${cacheKey} almacenado en Redis (TTL: 30min)`);
+
+		return res.status(200).json({
+			...response,
+			_cache: "MISS" // Indicador de que vino de BD
+		});
 	} catch (error) {
 		console.error("Error al obtener productos:", error);
 		return res.status(500).json({
@@ -300,10 +351,6 @@ export const eliminarProducto = async (req, res) => {
 			return res.status(404).json({ message: "Producto no encontrado" });
 		}
 
-		return res.status(200).json({
-			message: "Producto eliminado exitosamente",
-			producto: data,
-		});
 	} catch (error) {
 		console.error("Error al eliminar producto:", error);
 		return res.status(500).json({
