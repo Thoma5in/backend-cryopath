@@ -10,7 +10,7 @@ export const requireWorkerOrAdmin = async (req, res, next) => {
 
     try {
         //Llamada al microservicio de auth-usuarios para validar el token y obtener roles
-        const response = await fetch('http://localhost:3001/usuarios/roles', {
+        const response = await fetch(`${process.env.AUTH_SERVICE_URL}/usuarios/roles`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
