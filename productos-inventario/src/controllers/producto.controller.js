@@ -111,6 +111,10 @@ export const crearProducto = async (req, res) => {
 
 		console.log("BODY PRODUCTO:", req.body);
 
+		// Invalidar caché de productos
+		const keysInvalidated = await invalidatePattern("productos:*");
+		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+
 		return res.status(201).json({
 			message: "Producto creado exitosamente",
 			producto,
@@ -272,6 +276,10 @@ export const editarProducto = async (req, res) => {
 			}
 		}
 
+		// Invalidar caché de productos
+		const keysInvalidated = await invalidatePattern("productos:*");
+		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+
 		return res.status(200).json({
 			message: "Producto actualizado exitosamente",
 			producto: data,
@@ -350,6 +358,15 @@ export const eliminarProducto = async (req, res) => {
 		if (!data) {
 			return res.status(404).json({ message: "Producto no encontrado" });
 		}
+
+		// Invalidar caché de productos
+		const keysInvalidated = await invalidatePattern("productos:*");
+		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+
+		return res.status(200).json({
+			message: "Producto eliminado exitosamente",
+			producto: data
+		});
 
 	} catch (error) {
 		console.error("Error al eliminar producto:", error);
