@@ -143,6 +143,21 @@ async function invalidateProductoImagenesCache(id_producto) {
   console.log(`🗑️ Cache imágenes invalidado - producto: ${id_producto}`);
 }
 
+/**
+ * Invalidar cache de supercategorías
+ * @param {string|number} id_super_categoria - ID de la supercategoría (opcional)
+ * @returns {Promise<number>}
+ */
+async function invalidateSupercategoriasCache(id_super_categoria = null) {
+  const pattern = id_super_categoria 
+    ? `supercategoria:*${id_super_categoria}*`
+    : "supercategoria:*";
+  
+  const keysInvalidated = await invalidatePattern(pattern);
+  console.log(`🗑️ Cache supercategorías invalidado${id_super_categoria ? ` - ID: ${id_super_categoria}` : ''} - ${keysInvalidated} claves eliminadas`);
+  return keysInvalidated;
+}
+
 export {
   getCached,
   setCached,
@@ -152,5 +167,6 @@ export {
   invalidateProductosCache,
   invalidateProductoCategoriaCache,
   invalidateProductoImagenesCache,
+  invalidateSupercategoriasCache,
   TTL_CONFIG,
 };
