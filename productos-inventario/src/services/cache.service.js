@@ -131,6 +131,18 @@ async function invalidateProductoCategoriaCache({ id_producto, id_categoria, id_
   console.log(`🗑️ Cache producto-categoria invalidado - producto: ${id_producto}, categoria: ${id_categoria}${id_categoria_anterior ? `, anterior: ${id_categoria_anterior}` : ''}`);
 }
 
+/**
+ * Invalidar cache de imágenes de un producto
+ * @param {string|number} id_producto - ID del producto
+ * @returns {Promise<void>}
+ */
+async function invalidateProductoImagenesCache(id_producto) {
+  if (!id_producto) return;
+  
+  await invalidateCache(`producto:imagenes:${id_producto}`);
+  console.log(`🗑️ Cache imágenes invalidado - producto: ${id_producto}`);
+}
+
 export {
   getCached,
   setCached,
@@ -139,5 +151,6 @@ export {
   flushCache,
   invalidateProductosCache,
   invalidateProductoCategoriaCache,
+  invalidateProductoImagenesCache,
   TTL_CONFIG,
 };

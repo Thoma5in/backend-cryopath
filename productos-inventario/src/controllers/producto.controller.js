@@ -1,5 +1,5 @@
 import { supabase } from "../config/supabase.js";
-import { getCached, setCached, invalidateProductosCache, invalidateProductoCategoriaCache } from "../services/cache.service.js";
+import { getCached, setCached, invalidateProductosCache, invalidateProductoCategoriaCache, invalidateProductoImagenesCache } from "../services/cache.service.js";
 
 
 const extraerRutaObjeto = (url) => {
@@ -379,12 +379,13 @@ export const eliminarProducto = async (req, res) => {
 			return res.status(404).json({ message: "Producto no encontrado" });
 		}
 
-		// Invalidar caché de productos y relaciones producto-categoria
+		// Invalidar caché de productos, relaciones producto-categoria e imágenes
 		await invalidateProductosCache();
 		await invalidateProductoCategoriaCache({ 
 			id_producto, 
 			id_categoria: categoriaActual?.id_categoria 
 		});
+		await invalidateProductoImagenesCache(id_producto);
 
 		return res.status(200).json({
 			message: "Producto eliminado exitosamente",
@@ -431,7 +432,19 @@ export const obtenerImagenesProducto = async (req, res) => {
 	if (!id_producto) {
 		return res.status(400).json({ message: "El id_producto es obligatorio" });
 	}
+
+	const cacheKey = `producto:imagenes:${id_producto}`;
+
 	try {
+		// Intentar obtener del caché
+		const cached = await getCached(cacheKey);
+		if (cached) {
+			// console.log(`✅ CACHE HIT - Imágenes producto ${id_producto} desde Redis`);
+			return res.status(200).json({ ...cached, _cache: "HIT" });
+		}
+
+		console.log(`❌ CACHE MISS - Obteniendo imágenes de producto ${id_producto} desde Supabase`);
+
 		const { data, error } = await supabase
 			.from("producto_imagen")
 			.select("id_imagen, url")
@@ -442,7 +455,13 @@ export const obtenerImagenesProducto = async (req, res) => {
 			return res.status(400).json({ error: error.message });
 		}
 
-		return res.status(200).json({ imagenes: data ?? [] });
+		const response = { imagenes: data ?? [] };
+
+		// Cachear resultado
+		await setCached(cacheKey, response, "productos");
+		console.log(`💾 CACHE STORED - ${cacheKey} almacenado en Redis`);
+
+		return res.status(200).json({ ...response, _cache: "MISS" });
 	} catch (err) {
 		console.error("Error al obtener imágenes de producto:", err);
 		return res.status(500).json({ error: "Error interno del servidor" });
