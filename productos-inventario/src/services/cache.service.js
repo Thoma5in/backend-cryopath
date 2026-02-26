@@ -94,11 +94,50 @@ async function flushCache() {
   }
 }
 
+/**
+ * Invalidar cache de productos (todas las claves que empiezan con "productos:")
+ * @returns {Promise<number>} - Número de claves eliminadas
+ */
+async function invalidateProductosCache() {
+  const keysInvalidated = await invalidatePattern("productos:*");
+  console.log(`🗑️ Cache productos invalidado - ${keysInvalidated} claves eliminadas`);
+  return keysInvalidated;
+}
+
+/**
+ * Invalidar cache de relaciones producto-categoria
+ * @param {string|number} id_producto - ID del producto
+ * @param {string|number} id_categoria - ID de la categoría (opcional)
+ * @param {string|number} id_categoria_anterior - ID de la categoría anterior (opcional, para updates)
+ * @returns {Promise<void>}
+ */
+async function invalidateProductoCategoriaCache({ id_producto, id_categoria, id_categoria_anterior }) {
+  const promises = [];
+
+  if (id_producto) {
+    promises.push(invalidateCache(`producto:categoria:${id_producto}`));
+  }
+
+  if (id_categoria) {
+    promises.push(invalidateCache(`categoria:productos:${id_categoria}`));
+  }
+
+  if (id_categoria_anterior) {
+    promises.push(invalidateCache(`categoria:productos:${id_categoria_anterior}`));
+  }
+
+  await Promise.all(promises);
+  
+  console.log(`🗑️ Cache producto-categoria invalidado - producto: ${id_producto}, categoria: ${id_categoria}${id_categoria_anterior ? `, anterior: ${id_categoria_anterior}` : ''}`);
+}
+
 export {
   getCached,
   setCached,
   invalidateCache,
   invalidatePattern,
   flushCache,
+  invalidateProductosCache,
+  invalidateProductoCategoriaCache,
   TTL_CONFIG,
 };

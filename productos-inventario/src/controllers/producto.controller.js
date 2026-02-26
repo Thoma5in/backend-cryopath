@@ -1,5 +1,5 @@
 import { supabase } from "../config/supabase.js";
-import { getCached, setCached, invalidateCache, invalidatePattern } from "../services/cache.service.js";
+import { getCached, setCached, invalidateProductosCache, invalidateProductoCategoriaCache } from "../services/cache.service.js";
 
 
 const extraerRutaObjeto = (url) => {
@@ -112,11 +112,11 @@ export const crearProducto = async (req, res) => {
 		console.log("BODY PRODUCTO:", req.body);
 
 		// Invalidar caché de productos y relaciones producto-categoria
-		const keysInvalidated = await invalidatePattern("productos:*");
-		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
-
-		await invalidateCache(`producto:categoria:${producto.id_producto}`);
-		await invalidateCache(`categoria:productos:${id_categoria}`);
+		await invalidateProductosCache();
+		await invalidateProductoCategoriaCache({ 
+			id_producto: producto.id_producto, 
+			id_categoria 
+		});
 
 		return res.status(201).json({
 			message: "Producto creado exitosamente",
@@ -284,18 +284,15 @@ export const editarProducto = async (req, res) => {
 				});
 			}
 
-			await invalidateCache(`producto:categoria:${id_producto}`);
-
-			if (categoriaActual?.id_categoria) {
-				await invalidateCache(`categoria:productos:${categoriaActual.id_categoria}`);
-			}
-
-			await invalidateCache(`categoria:productos:${id_categoria}`);
+			await invalidateProductoCategoriaCache({ 
+				id_producto, 
+				id_categoria,
+				id_categoria_anterior: categoriaActual?.id_categoria
+			});
 		}
 
 		// Invalidar caché de productos
-		const keysInvalidated = await invalidatePattern("productos:*");
-		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+		await invalidateProductosCache();
 
 		return res.status(200).json({
 			message: "Producto actualizado exitosamente",
@@ -383,13 +380,11 @@ export const eliminarProducto = async (req, res) => {
 		}
 
 		// Invalidar caché de productos y relaciones producto-categoria
-		const keysInvalidated = await invalidatePattern("productos:*");
-		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
-
-		await invalidateCache(`producto:categoria:${id_producto}`);
-		if (categoriaActual?.id_categoria) {
-			await invalidateCache(`categoria:productos:${categoriaActual.id_categoria}`);
-		}
+		await invalidateProductosCache();
+		await invalidateProductoCategoriaCache({ 
+			id_producto, 
+			id_categoria: categoriaActual?.id_categoria 
+		});
 
 		return res.status(200).json({
 			message: "Producto eliminado exitosamente",
