@@ -111,9 +111,12 @@ export const crearProducto = async (req, res) => {
 
 		console.log("BODY PRODUCTO:", req.body);
 
-		// Invalidar caché de productos
+		// Invalidar caché de productos y relaciones producto-categoria
 		const keysInvalidated = await invalidatePattern("productos:*");
 		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+
+		await invalidateCache(`producto:categoria:${producto.id_producto}`);
+		await invalidateCache(`categoria:productos:${id_categoria}`);
 
 		return res.status(201).json({
 			message: "Producto creado exitosamente",
@@ -247,6 +250,12 @@ export const editarProducto = async (req, res) => {
 
 		// Si se proporciona una nueva categoría, actualizar la relación
 		if (id_categoria !== undefined) {
+			const { data: categoriaActual } = await supabase
+				.from("producto_categoria")
+				.select("id_categoria")
+				.eq("id_producto", id_producto)
+				.maybeSingle();
+
 			// Eliminar la categoría anterior
 			const { error: deleteError } = await supabase
 				.from("producto_categoria")
@@ -274,6 +283,14 @@ export const editarProducto = async (req, res) => {
 					message: "Producto actualizado pero error al asignar nueva categoría",
 				});
 			}
+
+			await invalidateCache(`producto:categoria:${id_producto}`);
+
+			if (categoriaActual?.id_categoria) {
+				await invalidateCache(`categoria:productos:${categoriaActual.id_categoria}`);
+			}
+
+			await invalidateCache(`categoria:productos:${id_categoria}`);
 		}
 
 		// Invalidar caché de productos
@@ -336,6 +353,12 @@ export const eliminarProducto = async (req, res) => {
 		}
 
 		// Eliminar relación con categorías
+		const { data: categoriaActual } = await supabase
+			.from("producto_categoria")
+			.select("id_categoria")
+			.eq("id_producto", id_producto)
+			.maybeSingle();
+
 		const { error: categoriaError } = await supabase
 			.from("producto_categoria")
 			.delete()
@@ -359,9 +382,14 @@ export const eliminarProducto = async (req, res) => {
 			return res.status(404).json({ message: "Producto no encontrado" });
 		}
 
-		// Invalidar caché de productos
+		// Invalidar caché de productos y relaciones producto-categoria
 		const keysInvalidated = await invalidatePattern("productos:*");
 		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+
+		await invalidateCache(`producto:categoria:${id_producto}`);
+		if (categoriaActual?.id_categoria) {
+			await invalidateCache(`categoria:productos:${categoriaActual.id_categoria}`);
+		}
 
 		return res.status(200).json({
 			message: "Producto eliminado exitosamente",

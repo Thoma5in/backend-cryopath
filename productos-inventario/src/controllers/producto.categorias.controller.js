@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase.js";
+import { getCached, setCached } from "../services/cache.service.js";
 
 /**
  * GET /productos/:id_producto/categoria
@@ -11,6 +12,16 @@ export const obtenerCategoriasProducto = async (req, res) => {
         if (!id_producto) {
             return res.status(400).json({
                 message: "id_producto es obligatorio"
+            });
+        }
+
+        const cacheKey = `producto:categoria:${id_producto}`;
+        const cached = await getCached(cacheKey);
+
+        if (cached) {
+            return res.json({
+                ...cached,
+                _cache: "HIT"
             });
         }
 
@@ -34,9 +45,16 @@ export const obtenerCategoriasProducto = async (req, res) => {
             });
         }
 
-        return res.json({
+        const response = {
             id_producto,
             categoria: data[0].categoria
+        };
+
+        await setCached(cacheKey, response, "producto_categoria");
+
+        return res.json({
+            ...response,
+            _cache: "MISS"
         });
 
     } catch (error) {
@@ -60,6 +78,16 @@ export const obtenerProductosPorCategoria = async (req, res) => {
             });
         }
 
+        const cacheKey = `categoria:productos:${id_categoria}`;
+        const cached = await getCached(cacheKey);
+
+        if (cached) {
+            return res.json({
+                ...cached,
+                _cache: "HIT"
+            });
+        }
+
         const { data, error } = await supabase
             .from("producto_categoria")
             .select(`
@@ -77,17 +105,31 @@ export const obtenerProductosPorCategoria = async (req, res) => {
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            return res.json({
+            const emptyResponse = {
                 id_categoria,
                 productos: []
+            };
+
+            await setCached(cacheKey, emptyResponse, "producto_categoria");
+
+            return res.json({
+                ...emptyResponse,
+                _cache: "MISS"
             });
         }
 
         const productos = data.map(item => item.producto);
 
-        return res.json({
+        const response = {
             id_categoria,
             productos
+        };
+
+        await setCached(cacheKey, response, "producto_categoria");
+
+        return res.json({
+            ...response,
+            _cache: "MISS"
         });
 
     } catch (error) {

@@ -6,6 +6,7 @@ const TTL_CONFIG = {
   supercategorias: 3600, // 1 hora
   productos_relacionados: 1800, // 30 minutos
   productos: 1800, // 30 minutos
+  producto_categoria: 900, // 15 minutos
   inventario: 600, // 10 minutos
   busqueda: 300, // 5 minutos
 };
