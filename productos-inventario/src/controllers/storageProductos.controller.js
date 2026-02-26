@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase.js";
+import { invalidateProductoImagenesCache } from "../services/cache.service.js";
 
 const extraerRutaObjeto = (url) => {
   try {
@@ -62,6 +63,9 @@ export const uploadImagenProducto = async (req, res) => {
       return res.status(400).json({ error: imagenError.message });
     }
 
+    // Invalidar caché de imágenes del producto
+    await invalidateProductoImagenesCache(id_producto);
+
     return res.status(200).json({
       message: "Imagen subida correctamente",
       path: data.path,
@@ -113,6 +117,9 @@ export const eliminarImagenesProducto = async (req, res) => {
     if (imagenError) {
       return res.status(400).json({ error: imagenError.message });
     }
+
+    // Invalidar caché de imágenes del producto
+    await invalidateProductoImagenesCache(id_producto);
 
     return res.status(200).json({
       message: "Imágenes eliminadas correctamente",

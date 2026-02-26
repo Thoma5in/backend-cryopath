@@ -1,5 +1,5 @@
 import { supabase } from "../config/supabase.js";
-import { getCached, setCached, invalidateCache, invalidatePattern } from "../services/cache.service.js";
+import { getCached, setCached, invalidateProductosCache, invalidateProductoCategoriaCache, invalidateProductoImagenesCache } from "../services/cache.service.js";
 
 
 const extraerRutaObjeto = (url) => {
@@ -111,9 +111,12 @@ export const crearProducto = async (req, res) => {
 
 		console.log("BODY PRODUCTO:", req.body);
 
-		// Invalidar caché de productos
-		const keysInvalidated = await invalidatePattern("productos:*");
-		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+		// Invalidar caché de productos y relaciones producto-categoria
+		await invalidateProductosCache();
+		await invalidateProductoCategoriaCache({ 
+			id_producto: producto.id_producto, 
+			id_categoria 
+		});
 
 		return res.status(201).json({
 			message: "Producto creado exitosamente",
@@ -247,6 +250,12 @@ export const editarProducto = async (req, res) => {
 
 		// Si se proporciona una nueva categoría, actualizar la relación
 		if (id_categoria !== undefined) {
+			const { data: categoriaActual } = await supabase
+				.from("producto_categoria")
+				.select("id_categoria")
+				.eq("id_producto", id_producto)
+				.maybeSingle();
+
 			// Eliminar la categoría anterior
 			const { error: deleteError } = await supabase
 				.from("producto_categoria")
@@ -274,11 +283,16 @@ export const editarProducto = async (req, res) => {
 					message: "Producto actualizado pero error al asignar nueva categoría",
 				});
 			}
+
+			await invalidateProductoCategoriaCache({ 
+				id_producto, 
+				id_categoria,
+				id_categoria_anterior: categoriaActual?.id_categoria
+			});
 		}
 
 		// Invalidar caché de productos
-		const keysInvalidated = await invalidatePattern("productos:*");
-		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+		await invalidateProductosCache();
 
 		return res.status(200).json({
 			message: "Producto actualizado exitosamente",
@@ -336,6 +350,12 @@ export const eliminarProducto = async (req, res) => {
 		}
 
 		// Eliminar relación con categorías
+		const { data: categoriaActual } = await supabase
+			.from("producto_categoria")
+			.select("id_categoria")
+			.eq("id_producto", id_producto)
+			.maybeSingle();
+
 		const { error: categoriaError } = await supabase
 			.from("producto_categoria")
 			.delete()
@@ -359,9 +379,13 @@ export const eliminarProducto = async (req, res) => {
 			return res.status(404).json({ message: "Producto no encontrado" });
 		}
 
-		// Invalidar caché de productos
-		const keysInvalidated = await invalidatePattern("productos:*");
-		console.log(`🗑️ Cache invalidado - ${keysInvalidated} claves eliminadas`);
+		// Invalidar caché de productos, relaciones producto-categoria e imágenes
+		await invalidateProductosCache();
+		await invalidateProductoCategoriaCache({ 
+			id_producto, 
+			id_categoria: categoriaActual?.id_categoria 
+		});
+		await invalidateProductoImagenesCache(id_producto);
 
 		return res.status(200).json({
 			message: "Producto eliminado exitosamente",
@@ -408,7 +432,19 @@ export const obtenerImagenesProducto = async (req, res) => {
 	if (!id_producto) {
 		return res.status(400).json({ message: "El id_producto es obligatorio" });
 	}
+
+	const cacheKey = `producto:imagenes:${id_producto}`;
+
 	try {
+		// Intentar obtener del caché
+		const cached = await getCached(cacheKey);
+		if (cached) {
+			// console.log(`✅ CACHE HIT - Imágenes producto ${id_producto} desde Redis`);
+			return res.status(200).json({ ...cached, _cache: "HIT" });
+		}
+
+		console.log(`❌ CACHE MISS - Obteniendo imágenes de producto ${id_producto} desde Supabase`);
+
 		const { data, error } = await supabase
 			.from("producto_imagen")
 			.select("id_imagen, url")
@@ -419,7 +455,13 @@ export const obtenerImagenesProducto = async (req, res) => {
 			return res.status(400).json({ error: error.message });
 		}
 
-		return res.status(200).json({ imagenes: data ?? [] });
+		const response = { imagenes: data ?? [] };
+
+		// Cachear resultado
+		await setCached(cacheKey, response, "productos");
+		console.log(`💾 CACHE STORED - ${cacheKey} almacenado en Redis`);
+
+		return res.status(200).json({ ...response, _cache: "MISS" });
 	} catch (err) {
 		console.error("Error al obtener imágenes de producto:", err);
 		return res.status(500).json({ error: "Error interno del servidor" });

@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase.js";
+import { getCached, setCached, invalidatePattern, invalidateSupercategoriasCache } from "../services/cache.service.js";
 
 /**
  * POST /supercategorias
@@ -43,6 +44,9 @@ export const crearSupercategoria = async (req, res) => {
             .single();
 
         if (error) throw error;
+
+        // Invalidar caché de supercategorías
+        await invalidateSupercategoriasCache();
 
         return res.status(201).json(data);
 
@@ -137,6 +141,9 @@ export const actualizarSupercategoria = async (req, res) => {
 
         if (error) throw error;
 
+        // Invalidar caché de esta supercategoría
+        await invalidateSupercategoriasCache(id_super_categoria);
+
         return res.json(data);
 
     } catch (error) {
@@ -167,6 +174,9 @@ export const eliminarSupercategoria = async (req, res) => {
             .eq("id_super_categoria", id_super_categoria);
 
         if (error) throw error;
+
+        // Invalidar caché de esta supercategoría
+        await invalidateSupercategoriasCache(id_super_categoria);
 
         return res.status(204).send();
 
@@ -300,6 +310,10 @@ export const asignarCategoriaASupercategoria = async (req, res) => {
 
         if (error) throw error;
 
+        // Invalidar caché de productos de esta supercategoría
+        await invalidatePattern(`supercategoria:productos:${id_super_categoria}:*`);
+        console.log(`🗑️ Caché invalidado - categoría ${id_categoria} asignada a supercategoría ${id_super_categoria}`);
+
         return res.status(201).json(data);
 
     } catch (error) {
@@ -331,6 +345,10 @@ export const desasignarCategoriaDeSupercategoria = async (req, res) => {
             .eq("id_categoria", id_categoria);
 
         if (error) throw error;
+
+        // Invalidar caché de productos de esta supercategoría
+        await invalidatePattern(`supercategoria:productos:${id_super_categoria}:*`);
+        console.log(`🗑️ Caché invalidado - categoría ${id_categoria} desasignada de supercategoría ${id_super_categoria}`);
 
         return res.status(204).send();
 
@@ -371,6 +389,21 @@ export const obtenerProductosPorSupercategoria = async (req, res) => {
                 message: "limit debe ser > 0 y offset >= 0"
             });
         }
+
+        // Generar clave de caché única para esta consulta
+        const cacheKey = `supercategoria:productos:${id_super_categoria}:${limitNum}:${offsetNum}:${estado}`;
+
+        // Intentar obtener del caché
+        const cached = await getCached(cacheKey);
+        if (cached) {
+            console.log(`✅ CACHE HIT - Productos de supercategoría ${id_super_categoria} desde Redis`);
+            return res.json({
+                ...cached,
+                _cache: "HIT"
+            });
+        }
+
+        console.log(`❌ CACHE MISS - Obteniendo productos de supercategoría ${id_super_categoria} desde Supabase...`);
 
         // Verificar que la supercategoría existe
         const { data: supercategoriaExiste, error: errorSupercat } = await supabase
@@ -447,13 +480,27 @@ export const obtenerProductosPorSupercategoria = async (req, res) => {
         const total = productos.length;
         const productoPaginados = productos.slice(offsetNum, offsetNum + limitNum);
 
-        return res.json({
+        const response = {
+            total,
+            limit: limitNum,
+            offset: offsetNum,
+            count: productoPaginados.length,
+            data: productoPaginados,
+            _cache: "MISS"
+        };
+
+        // Guardar en caché
+        await setCached(cacheKey, {
             total,
             limit: limitNum,
             offset: offsetNum,
             count: productoPaginados.length,
             data: productoPaginados
-        });
+        }, "productos");
+
+        console.log(`💾 Productos de supercategoría ${id_super_categoria} guardados en caché`);
+
+        return res.json(response);
 
     } catch (error) {
         console.error("Error al obtener productos por supercategoría:", error);
