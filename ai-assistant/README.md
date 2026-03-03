@@ -1,6 +1,6 @@
-# AI Assistant - Integración con n8n
+# AI Assistant - Servicio de Chat con IA
 
-Microservicio para conectar con workflows de n8n para chat de IA.
+Microservicio para integración con workflows de n8n, permitiendo chat de IA en la plataforma Cryopath.
 
 ## 🚀 Instalación
 
