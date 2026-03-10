@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
+import direccionRoutes from "./routes/direccion.routes.js";
 import { responseTimeMiddleware } from "./middlewares/responseTime.middleware.js";
 
 const app = express();
@@ -16,8 +17,11 @@ app.get("/health", (req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/usuarios/direcciones', direccionRoutes);
 app.use('/usuarios', usuarioRoutes);
 
 app.use('/admin', adminRoutes);
+
+
 
 export default app;
