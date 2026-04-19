@@ -20,19 +20,7 @@ app.get("/health", (req, res) => {
 
 app.use("/cart", carritoRoutes);
 app.use("/orden", ordenRoutes);
-
-app.get("/test-db", async (req, res) => {
-  const { data, error } = await supabase
-  .from("producto")
-  .select(`*, producto_imagen (id_imagen, url)`);
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-  
-  res.json({ data });
-})
-
+app.use("/pedidos", pedidosRoutes);
 app.use("/pagos", pagosRoutes);
 app.use("/orden", ordenRoutes);
 app.use("/vendedor", vendedorRoutes);

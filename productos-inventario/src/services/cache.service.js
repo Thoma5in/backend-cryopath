@@ -20,6 +20,8 @@ async function getCached(key) {
   try {
     const isRedisReady = await ensureRedisConnection();
     if (!isRedisReady || !redisClient) {
+    const isConnected = await ensureRedisConnection();
+    if (!isConnected) {
       return null;
     }
 
@@ -45,6 +47,8 @@ async function setCached(key, value, type = 'default') {
   try {
     const isRedisReady = await ensureRedisConnection();
     if (!isRedisReady || !redisClient) {
+    const isConnected = await ensureRedisConnection();
+    if (!isConnected) {
       return;
     }
 
@@ -64,6 +68,8 @@ async function invalidateCache(key) {
   try {
     const isRedisReady = await ensureRedisConnection();
     if (!isRedisReady || !redisClient) {
+    const isConnected = await ensureRedisConnection();
+    if (!isConnected) {
       return;
     }
 
@@ -82,6 +88,8 @@ async function invalidatePattern(pattern) {
   try {
     const isRedisReady = await ensureRedisConnection();
     if (!isRedisReady || !redisClient) {
+    const isConnected = await ensureRedisConnection();
+    if (!isConnected) {
       return 0;
     }
 
@@ -104,6 +112,8 @@ async function flushCache() {
   try {
     const isRedisReady = await ensureRedisConnection();
     if (!isRedisReady || !redisClient) {
+    const isConnected = await ensureRedisConnection();
+    if (!isConnected) {
       return;
     }
 
