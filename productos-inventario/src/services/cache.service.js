@@ -18,7 +18,11 @@ const TTL_CONFIG = {
  */
 async function getCached(key) {
   try {
-    await ensureRedisConnection();
+    const isRedisReady = await ensureRedisConnection();
+    if (!isRedisReady || !redisClient) {
+      return null;
+    }
+
     const value = await redisClient.get(key);
     if (value) {
       return JSON.parse(value);
@@ -39,7 +43,11 @@ async function getCached(key) {
  */
 async function setCached(key, value, type = 'default') {
   try {
-    await ensureRedisConnection();
+    const isRedisReady = await ensureRedisConnection();
+    if (!isRedisReady || !redisClient) {
+      return;
+    }
+
     const ttl = TTL_CONFIG[type] || 600;
     await redisClient.setEx(key, ttl, JSON.stringify(value));
   } catch (err) {
@@ -54,7 +62,11 @@ async function setCached(key, value, type = 'default') {
  */
 async function invalidateCache(key) {
   try {
-    await ensureRedisConnection();
+    const isRedisReady = await ensureRedisConnection();
+    if (!isRedisReady || !redisClient) {
+      return;
+    }
+
     await redisClient.del(key);
   } catch (err) {
     console.error(`Cache error invalidating ${key}:`, err);
@@ -68,7 +80,11 @@ async function invalidateCache(key) {
  */
 async function invalidatePattern(pattern) {
   try {
-    await ensureRedisConnection();
+    const isRedisReady = await ensureRedisConnection();
+    if (!isRedisReady || !redisClient) {
+      return 0;
+    }
+
     const keys = await redisClient.keys(pattern);
     if (keys.length > 0) {
       await redisClient.del(keys);
@@ -86,7 +102,11 @@ async function invalidatePattern(pattern) {
  */
 async function flushCache() {
   try {
-    await ensureRedisConnection();
+    const isRedisReady = await ensureRedisConnection();
+    if (!isRedisReady || !redisClient) {
+      return;
+    }
+
     await redisClient.flushDb();
     console.log('Cache: All data cleared');
   } catch (err) {
