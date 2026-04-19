@@ -5,6 +5,7 @@ import carritoRoutes from "./routes/carrito.routes.js";
 import pagosRoutes from "./routes/pagos.routes.js";
 import ordenRoutes from "./routes/orden.routes.js";
 import pedidosRoutes from "./routes/pedidos.routes.js";
+import vendedorRoutes from "./routes/vendedor.routes.js";
 import { responseTimeMiddleware } from "./middlewares/responseTime.middleware.js";
 
 const app = express();
@@ -21,5 +22,7 @@ app.use("/cart", carritoRoutes);
 app.use("/orden", ordenRoutes);
 app.use("/pedidos", pedidosRoutes);
 app.use("/pagos", pagosRoutes);
+app.use("/orden", ordenRoutes);
+app.use("/vendedor", vendedorRoutes);
 
 export default app;

@@ -25,9 +25,12 @@ SUPABASE_ANON_KEY=your-anon-key
 JWT_SECRET=your-jwt-secret
 
 # Redis
+REDIS_ENABLED=true
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=your-redis-password
+REDIS_CONNECT_TIMEOUT_MS=3000
+REDIS_RETRY_COOLDOWN_MS=30000
 
 # Storage
 SUPABASE_STORAGE_BUCKET=productos
@@ -229,6 +232,7 @@ curl -X POST http://localhost:3005/api/promociones \
 
 - Usa Supabase para almacenamiento de datos y archivos
 - Redis cachea automáticamente las consultas frecuentes
+- Si Redis no está disponible, el servicio continúa sin caché temporalmente
 - El caché se invalida al actualizar o eliminar productos
 - Multer maneja la subida de imágenes
 - Las imágenes se almacenan en Supabase Storage
