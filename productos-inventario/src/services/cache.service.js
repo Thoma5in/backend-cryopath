@@ -18,8 +18,6 @@ const TTL_CONFIG = {
  */
 async function getCached(key) {
   try {
-    const isRedisReady = await ensureRedisConnection();
-    if (!isRedisReady || !redisClient) {
     const isConnected = await ensureRedisConnection();
     if (!isConnected) {
       return null;
@@ -45,8 +43,6 @@ async function getCached(key) {
  */
 async function setCached(key, value, type = 'default') {
   try {
-    const isRedisReady = await ensureRedisConnection();
-    if (!isRedisReady || !redisClient) {
     const isConnected = await ensureRedisConnection();
     if (!isConnected) {
       return;
@@ -66,8 +62,6 @@ async function setCached(key, value, type = 'default') {
  */
 async function invalidateCache(key) {
   try {
-    const isRedisReady = await ensureRedisConnection();
-    if (!isRedisReady || !redisClient) {
     const isConnected = await ensureRedisConnection();
     if (!isConnected) {
       return;
@@ -86,8 +80,6 @@ async function invalidateCache(key) {
  */
 async function invalidatePattern(pattern) {
   try {
-    const isRedisReady = await ensureRedisConnection();
-    if (!isRedisReady || !redisClient) {
     const isConnected = await ensureRedisConnection();
     if (!isConnected) {
       return 0;
@@ -110,8 +102,6 @@ async function invalidatePattern(pattern) {
  */
 async function flushCache() {
   try {
-    const isRedisReady = await ensureRedisConnection();
-    if (!isRedisReady || !redisClient) {
     const isConnected = await ensureRedisConnection();
     if (!isConnected) {
       return;
